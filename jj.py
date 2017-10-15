@@ -1,8 +1,9 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 
-doc = "mir.txt"
+DOC = "mir.txt"
 G = nx.Graph()
+PESOS =
 
 class State:
 
@@ -17,11 +18,11 @@ class State:
 
 
 def read_doc(doc_name):
-    
+
     Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
-    Weight = []                     #vetor de peso de componentes de satelite 
-    launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost 
+    Weight = []                     #vetor de peso de componentes de satelite
+    launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
 
     f = open(doc_name)
     line = f.readline()
@@ -53,6 +54,9 @@ def read_doc(doc_name):
     plt.show() # display
     '''
 
+    print(Vertices)
+    print(Weight)
+
     return Vertices, Edges, launch_datas, G
 
 
@@ -65,7 +69,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, ac
         for x in range(0,len(adj_nodes)):
             if (element_weight[x] > max_weight):
                 adj_nodes.remove(adj_nodes[x])
-                element_weight.remove(element_weight[x]) 
+                element_weight.remove(element_weight[x])
 
         for x in range(0, len(adj_nodes)):
             new_state = create_state(actual_state.Launch,actual_state.Elements.append(adj_nodes[x]))
@@ -86,7 +90,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, ac
 
 
 def main():
-    V, E, L, G = read_doc(doc)
+    V, E, L, G = read_doc(DOC)
 
     node_key = G['VCM']
     node_list = []
@@ -96,5 +100,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
