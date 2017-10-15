@@ -95,7 +95,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, ac
 def main():
     V, E, L, G = read_doc(DOC)
     print(PESOS)
-    
+
     node_key = G['VCM']
     node_list = []
     for key in node_key.keys():
@@ -107,11 +107,11 @@ def main():
 
     print (init.getter())
 
-    ´#all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5,  PESOS)
+    #all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5,  PESOS)
 
 
     print (init)
-    
+
 
 if __name__ == "__main__":
     main()
