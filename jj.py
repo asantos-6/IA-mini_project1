@@ -7,11 +7,11 @@ PESOS =
 
 class State:
 
-    def create_state(launch, elements_on_space):
+    def __init__(self, launch, elements_on_space):
         self.Launch = launch
         self.Elements = elements_on_space
 
-        return self
+        return
 
 
 
@@ -97,6 +97,10 @@ def main():
     for key in node_key.keys():
         node_list.append(key)
     print (node_list)
+
+    elements = []
+    init = State(1,elements)
+    print (init)
 
 if __name__ == "__main__":
     main()
