@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 DOC = "mir.txt"
 G = nx.Graph()
-PESOS =
+PESOS = dict()
 
 class State:
 
@@ -13,6 +13,12 @@ class State:
 
         return
 
+    def getter(self):
+        a = [self.Launch,self.Elements]
+        return a
+
+    def get_element(self):
+        return self.Elements
 
 
 
@@ -98,9 +104,11 @@ def main():
         node_list.append(key)
     print (node_list)
 
-    elements = []
+    elements = ['VCM']
     init = State(1,elements)
-    print (init)
+    print (init.getter())
+
+    find_all_next_states(init, init.get_element(), node_list, 22.8, 5,  PESOS)
 
 if __name__ == "__main__":
     main()
