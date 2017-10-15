@@ -90,10 +90,10 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
             print (current_state.getter())
 
             new_launched_nodes = list(launched_nodes)
-            del launched_nodes[x]
+            del new_launched_nodes[x]
 
             new_adj_nodes = list(adj_nodes)
-            del adj_nodes[x]
+            del new_adj_nodes[x]
 
             adj_list = find_adj_node(adj_nodes[x])
 
