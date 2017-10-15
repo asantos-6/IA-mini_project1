@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 
 DOC = "mir.txt"
 G = nx.Graph()
-PESOS =
+PESOS = dict()
 
 class State:
 
@@ -53,13 +53,10 @@ def read_doc(doc_name):
     plt.savefig("simple_path.png") # save as png
     plt.show() # display
     '''
-
-    print(Vertices)
-    print(Weight)
+    for x in range(0,len(Vertices)):
+        PESOS[Vertices[x]] = Weight[x]
 
     return Vertices, Edges, launch_datas, G
-
-
 
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, act_weight, element_weight):
@@ -91,7 +88,8 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, ac
 
 def main():
     V, E, L, G = read_doc(DOC)
-
+    print(PESOS)
+    '''
     node_key = G['VCM']
     node_list = []
     for key in node_key.keys():
@@ -101,6 +99,6 @@ def main():
     elements = []
     init = State(1,elements)
     print (init)
-
+    '''
 if __name__ == "__main__":
     main()
