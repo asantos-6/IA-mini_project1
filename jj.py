@@ -65,12 +65,12 @@ def read_doc(doc_name):
     return Vertices, Edges, launch_datas, G
 
 
-def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, act_weight, element_weight):
+def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight, element_weight):
     next_states = []
 
     if (len(adj_nodes) > 0):
         for x in range(0,len(adj_nodes)):
-            if (element_weight[x] > max_weight):
+            if (element_weight[x] > max_payload):
                 adj_nodes.remove(adj_nodes[x])
                 element_weight.remove(element_weight[x])
 
@@ -84,7 +84,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_weight, ac
             new_element_weight = list(element_weight)
             new_act_weight = act_weight + element_weight[x]
             del element_weight[x]
-            next_states.append(find_all_next_states(new_state, new_launched_nodes, new_adj_nodes, max_weight, new_act_weight, element_weight))
+            next_states.append(find_all_next_states(new_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight, element_weight))
 
 
     return new_state
