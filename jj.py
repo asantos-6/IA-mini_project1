@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
+BUG = 0
 
 class State:
 
@@ -80,10 +81,13 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
         '''
 
         for x in range(0, len(adj_nodes)):
+            print ("-----------------------------",adj_nodes[x])
             new_elements = actual_state.get_element()
             new_elements.append(adj_nodes[x])
             current_state = State(actual_state.get_launch(),new_elements)
-            new_states.append(current_state)
+            next_states.append(current_state)
+
+            print (current_state.getter())
 
             new_launched_nodes = list(launched_nodes)
             del launched_nodes[x]
@@ -91,12 +95,14 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
             new_adj_nodes = list(adj_nodes)
             del adj_nodes[x]
 
+            adj_list = find_adj_node(adj_nodes[x])
+
+            #for node in adj_list:
 
 
             new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
 
             next_states.append(find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
-
 
     return new_state
 
@@ -106,7 +112,7 @@ def find_adj_node(node):
     node_list = []
     for key in node_key.keys():
         node_list.append(key)
-    print (node_list)
+    #print (node_list)
     return node_list
 
 
@@ -116,13 +122,13 @@ def main():
 
     
 
-    elements = ['VCM']
-    init = State(1,elements)
-
+    init = State(1,['VCM'])
     print (init.getter())
 
-    #all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5,  PESOS)
+    node_list = find_adj_node('VCM')
 
+    all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5)
+    print (all_states)
 
     print (init)
 
