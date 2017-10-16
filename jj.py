@@ -119,7 +119,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
             new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
 
-            next_states.append(find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
+            next_states.extend(find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
 
     return next_states
 
@@ -149,7 +149,7 @@ def main():
     all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5)
     print (len(all_states))
     for a in all_states:
-        print (type(a))
+        a.print_state()
 
     print (init)
 
