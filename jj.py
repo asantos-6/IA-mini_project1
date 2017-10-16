@@ -5,7 +5,7 @@ DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
 BUG = 0
-
+dede = 6
 def increment():
     BUG += 1
     return
@@ -92,7 +92,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
             if (len(adj_nodes) ==3):
                 print ("--------------primeira chamada---------------", new_elements)
             print ("-----------------------------",adj_nodes[x])
-            
+
             new_elements.append(adj_nodes[x])
             current_state = State(actual_state.get_launch(),new_elements)
             del new_elements[-1]
@@ -130,7 +130,7 @@ def main():
     V, E, L, G = read_doc(DOC)
     print(PESOS)
 
-    
+
 
     init = State(1,['VCM'])
     print (init.getter())
