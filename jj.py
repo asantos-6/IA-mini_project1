@@ -6,6 +6,10 @@ G = nx.Graph()
 PESOS = dict()
 BUG = 0
 
+def increment():
+    BUG += 1
+    return
+
 class State:
 
     def __init__(self, launch, elements_on_space):
@@ -23,6 +27,10 @@ class State:
 
     def get_launch(self):
         return self.Launch
+
+    def print_state(self):
+        print (self.Launch, self.Elements)
+        return
 
 
 
@@ -79,18 +87,20 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
                 adj_nodes.remove(adj_nodes[x])
                 element_weight.remove(element_weight[x])
         '''
-
+        new_elements = actual_state.get_element()
         for x in range(0, len(adj_nodes)):
+            if (len(adj_nodes) ==3):
+                print ("--------------primeira chamada---------------", new_elements)
             print ("-----------------------------",adj_nodes[x])
-            new_elements = actual_state.get_element()
+            
             new_elements.append(adj_nodes[x])
             current_state = State(actual_state.get_launch(),new_elements)
+            del new_elements[-1]
             next_states.append(current_state)
-
             print (current_state.getter())
 
             new_launched_nodes = list(launched_nodes)
-            del new_launched_nodes[x]
+            new_launched_nodes.append(adj_nodes[x])
 
             new_adj_nodes = list(adj_nodes)
             del new_adj_nodes[x]
@@ -104,7 +114,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
             next_states.append(find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
 
-    return new_state
+    return next_states
 
 
 def find_adj_node(node):
@@ -127,8 +137,11 @@ def main():
 
     node_list = find_adj_node('VCM')
 
+    print (node_list)
+    node_list = ['VS', 'VK1', 'VK2']
     all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5)
-    print (all_states)
+    for a in range(0,len(all_states)):
+        all_states[a].print_state()
 
     print (init)
 
