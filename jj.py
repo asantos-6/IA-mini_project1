@@ -1,5 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import time
 
 DOC = "mir.txt"
 G = nx.Graph()
@@ -29,7 +30,7 @@ class State:
         return self.Launch
 
     def print_state(self):
-        print (self.Launch, self.Elements)
+        print ("state print:",self.Launch, self.Elements)
         return
 
 
@@ -92,13 +93,19 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
             if (len(adj_nodes) ==3):
                 print ("--------------primeira chamada---------------", new_elements)
             print ("-----------------------------",adj_nodes[x])
-            
+            #actual_state.print_state()
+            new_elements = list(actual_state.get_element())
             new_elements.append(adj_nodes[x])
-            current_state = State(actual_state.get_launch(),new_elements)
-            del new_elements[-1]
+            #print ("list",new_elements)
+            new_elements1 = list(new_elements)
+            current_state = State(actual_state.get_launch(),new_elements1)
+            #current_state.print_state()
             next_states.append(current_state)
-            print (current_state.getter())
+            del new_elements[-1]
+            #current_state.print_state()
 
+            print (current_state.getter())
+            
             new_launched_nodes = list(launched_nodes)
             new_launched_nodes.append(adj_nodes[x])
 
@@ -140,8 +147,9 @@ def main():
     print (node_list)
     node_list = ['VS', 'VK1', 'VK2']
     all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5)
-    for a in range(0,len(all_states)):
-        all_states[a].print_state()
+    print (len(all_states))
+    for a in all_states:
+        print (type(a))
 
     print (init)
 
