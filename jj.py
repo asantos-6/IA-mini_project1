@@ -85,7 +85,7 @@ def read_doc(doc_name):
                 Edges.append(edge)
             if(words[0][0] == 'L'):
                 words[1]
-                launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), words[2], words[3], words[4])
+                launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), float(words[2]), words[3], float(words[4]))
                 Launches.append(launch)
                 #launch_info.append(words[2])
                 #launch_info.append(words[3])
