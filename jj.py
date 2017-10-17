@@ -2,10 +2,11 @@ import networkx as nx
 import matplotlib.pyplot as plt
 
 DOC = "mir.txt"
-G = nx.Graph()
+STATION_PLANT = nx.Graph()
+LAUNCH_GRAPH = nx.Graph()
 PESOS = dict()
 BUG = 0
-dede = 6
+
 def increment():
     BUG += 1
     return
@@ -49,7 +50,7 @@ def read_doc(doc_name):
         words = line.split(" ")
         if(words[0] != ""):
             if(words[0][0] == "V"):
-                G.add_node(words[0])
+                STATION_PLANT.add_node(words[0])
                 Vertices.append(words[0])
                 Weight.append(float(words[1]))
             if(words[0][0] == "E"):
@@ -67,7 +68,7 @@ def read_doc(doc_name):
         line = f.readline()
 
     '''
-    nx.draw(G,with_labels = True)
+    nx.draw(STATION_PLANT,with_labels = True)
     plt.savefig("simple_path.png") # save as png
     plt.show() # display
     '''
@@ -77,48 +78,19 @@ def read_doc(doc_name):
     return Vertices, Edges, launch_datas, G
 
 
-def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
-    next_states = []
+def find_all_next_states(previous_node_list, actual_node, max_payload):
+    for x in previous_node_list:
+        print(x)
+        current_weight = PESOS[actual_node] + PESOS[x]
 
-    if (len(adj_nodes) > 0):
-        '''
-        for x in range(0,len(adj_nodes)):
-            if (element_weight[x] > max_payload):
-                adj_nodes.remove(adj_nodes[x])
-                element_weight.remove(element_weight[x])
-        '''
-        new_elements = actual_state.get_element()
-        for x in range(0, len(adj_nodes)):
-            if (len(adj_nodes) ==3):
-                print ("--------------primeira chamada---------------", new_elements)
-            print ("-----------------------------",adj_nodes[x])
+    if current_weight < max_payload:
 
-            new_elements.append(adj_nodes[x])
-            current_state = State(actual_state.get_launch(),new_elements)
-            del new_elements[-1]
-            next_states.append(current_state)
-            print (current_state.getter())
-
-            new_launched_nodes = list(launched_nodes)
-            new_launched_nodes.append(adj_nodes[x])
-
-            new_adj_nodes = list(adj_nodes)
-            del new_adj_nodes[x]
-
-            adj_list = find_adj_node(adj_nodes[x])
-
-            #for node in adj_list:
-
-
-            new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
-
-            next_states.append(find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
 
     return next_states
 
 
 def find_adj_node(node):
-    node_key = G[node]
+    node_key = STATION_PLANT[node]
     node_list = []
     for key in node_key.keys():
         node_list.append(key)
@@ -127,7 +99,7 @@ def find_adj_node(node):
 
 
 def main():
-    V, E, L, G = read_doc(DOC)
+    V, E, L, STATION_PLANT = read_doc(DOC)
     print(PESOS)
 
 
