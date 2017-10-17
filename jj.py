@@ -1,6 +1,6 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-import datetime as date
+from datetime import date
 
 DOC = "mir.txt"
 STATION_PLANT = nx.Graph()
@@ -18,14 +18,17 @@ class Element:
         self.weight = weight
         self.adj_list = []
 
+    def get_element(self):
+        return self.ID
+
 class Edge:
     def __init__(self, element1, element2):
         self.element1 = element1
         self.element2 = element2
 
 class Launch:
-    def __init__(self, date, max_payload, fixed_cost, variable_cost):
-        self.date = date
+    def __init__(self, launch_date, max_payload, fixed_cost, variable_cost):
+        self.launch_date = launch_date
         self.max_payload = max_payload
         self.fixed_cost = fixed_cost
         self.variable_cost = variable_cost
@@ -69,7 +72,7 @@ def read_doc(doc_name):
         words = line.split(" ")
         if(words[0] != ""):
             if(words[0][0] == "V"):
-                element = Element(words[0], words[1])
+                element = Element(words[0], float(words[1]))
                 STATION_PLANT.add_node(element)
                 Vertices.append(element)
                 #Weight.append(float(words[1]))
@@ -78,10 +81,11 @@ def read_doc(doc_name):
                 #edge = (words[1], words[2])
                 #edge_pair.append(words[1])
                 #edge_pair.append(words[2])
-                STATION_PLANT.add_edge(edge)
+                STATION_PLANT.add_edge(edge.element1, edge.element2)
                 Edges.append(edge)
             if(words[0][0] == 'L'):
-                launch = Launch(date(words[1]), words[2], words[3], words[4])
+                words[1]
+                launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), words[2], words[3], words[4])
                 Launches.append(launch)
                 #launch_info.append(words[2])
                 #launch_info.append(words[3])
@@ -93,24 +97,27 @@ def read_doc(doc_name):
     plt.savefig("simple_path.png") # save as png
     plt.show() # display
     '''
-    Launches.sort(key=Lambda r: r.date)
-    '''preencher lista de adjacentes para cada Element aqui'''
+    Launches.sort(key = lambda r: r.launch_date)
+
+    for x in Vertices:
+        x.adj_list = find_adj_node(x.get_element())
     #for x in range(0,len(Vertices)):
         #PESOS[Vertices[x]] = Weight[x]
 
-    return Vertices, Edges, launch_datas, G
+    return Vertices, Edges, Launches, STATION_PLANT
 
 
 def find_all_next_states(previous_node_list, actual_node, max_payload):
     for x in previous_node_list:
         print(x)
-        current_weight = PESOS[actual_node] + PESOS[x] '''mudar esta merda'''
+        current_weight = PESOS[actual_node] + PESOS[x]
+        '''mudar esta merda
 
     if current_weight < max_payload:
 
 
     return next_states
-
+    '''
 
 def find_adj_node(node):
     node_key = STATION_PLANT[node]
@@ -123,10 +130,12 @@ def find_adj_node(node):
 
 def main():
     V, E, L, STATION_PLANT = read_doc(DOC)
-    print(PESOS)
+    #print(PESOS)
 
+    for x in V:
+        print(x.get_element(), "->", x.adj_list)
 
-
+    '''
     init = State(1,['VCM'])
     print (init.getter())
 
@@ -139,7 +148,7 @@ def main():
         all_states[a].print_state()
 
     print (init)
-
+    '''
 
 if __name__ == "__main__":
     main()
