@@ -1,12 +1,13 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 from datetime import date
+from disjoint_union import *
 
 DOC = "mir.txt"
 STATION_PLANT = nx.Graph()
+STATION_ELEMENTS = []
 LAUNCH_GRAPH = nx.Graph()
 #PESOS = dict()
-BUG = 0
 
 def increment():
     BUG += 1
@@ -33,24 +34,39 @@ class Launch:
         self.fixed_cost = fixed_cost
         self.variable_cost = variable_cost
 
+    def get_info(self, mode):
+        if mode == "d":
+            return self.launch_date
+        if mode == "p":
+            return self.max_payload
+        if mode == "f":
+            return self.fixed_cost
+        if mode == "v":
+            return self.variable_cost
+
 
 class State:
-    def __init__(self, launch, elements_on_space):
-        self.Launch = launch
-        self.Elements = elements_on_space
+    def __init__(self, launch, elements):
+        self.launch = launch
+        self.elements = elements
 
         return
 
-    def getter(self):
-        a = [self.Launch,self.Elements]
-        return a
-
+    def get_info(self, mode):
+        if mode == "all":
+            a = [self.launch,self.elements]
+            return a
+        if mode == "e":
+            return self.elements
+        if mode == "l":
+            return self.launch
+    '''
     def get_element(self):
         return self.Elements
 
     def get_launch(self):
         return self.Launch
-
+    '''
     def print_state(self):
         print (self.Launch, self.Elements)
         return
@@ -60,7 +76,7 @@ class State:
 
 def read_doc(doc_name):
 
-    Vertices = []                   #vetor de vertices do satelite
+    #Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
     #Weight = []                     #vetor de peso de componentes de satelite
     Launches = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
@@ -74,7 +90,7 @@ def read_doc(doc_name):
             if(words[0][0] == "V"):
                 element = Element(words[0], float(words[1]))
                 STATION_PLANT.add_node(element)
-                Vertices.append(element)
+                STATION_ELEMENTS.append(element)
                 #Weight.append(float(words[1]))
             if(words[0][0] == "E"):
                 edge = Edge(words[1], words[2])
@@ -85,7 +101,7 @@ def read_doc(doc_name):
                 Edges.append(edge)
             if(words[0][0] == 'L'):
                 words[1]
-                launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), float(words[2]), words[3], float(words[4]))
+                launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), float(words[2]), words[3], words[4])
                 Launches.append(launch)
                 #launch_info.append(words[2])
                 #launch_info.append(words[3])
@@ -99,18 +115,20 @@ def read_doc(doc_name):
     '''
     Launches.sort(key = lambda r: r.launch_date)
 
-    for x in Vertices:
-        x.adj_list = find_adj_node(x.get_element())
+    for e in STATION_ELEMENTS:
+        e.adj_list = find_adj_node(e.get_element())
     #for x in range(0,len(Vertices)):
         #PESOS[Vertices[x]] = Weight[x]
 
-    return Vertices, Edges, Launches, STATION_PLANT
+    return STATION_ELEMENTS, Edges, Launches, STATION_PLANT
 
 
-def find_all_next_states(previous_node_list, actual_node, max_payload):
-    for x in previous_node_list:
-        print(x)
-        current_weight = PESOS[actual_node] + PESOS[x]
+def find_all_next_states(previous_state, actual_node, max_payload):
+    if previous_state.get_info("l") == 0:
+        open_list = STATION_ELEMENTS
+    else:
+        open_list = previous_state.get_info("e")
+
         '''mudar esta merda
 
     if current_weight < max_payload:
@@ -129,21 +147,23 @@ def find_adj_node(node):
 
 
 def main():
-    V, E, L, STATION_PLANT = read_doc(DOC)
+    STATION_ELEMENTS, E, L, STATION_PLANT = read_doc(DOC)
     #print(PESOS)
 
-    for x in V:
-        print(x.get_element(), "->", x.adj_list)
-
+    #for e in STATION_ELEMENTS:
+        #print(e.get_element(), "->", e.adj_list)
+    #print(STATION_PLANT)
+    #for node in STATION_PLANT:
+        #print (node.get_element())
     '''
     init = State(1,['VCM'])
-    print (init.getter())
+    print (init.get_info("all"))
 
     node_list = find_adj_node('VCM')
 
     print (node_list)
     node_list = ['VS', 'VK1', 'VK2']
-    all_states = find_all_next_states(init, init.get_element(), node_list, 22.8, 5)
+    all_states = find_all_next_states(init, init.get_info("e"), node_list, 22.8, 5)
     for a in range(0,len(all_states)):
         all_states[a].print_state()
 
