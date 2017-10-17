@@ -1,18 +1,37 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import datetime as date
 
 DOC = "mir.txt"
 STATION_PLANT = nx.Graph()
 LAUNCH_GRAPH = nx.Graph()
-PESOS = dict()
+#PESOS = dict()
 BUG = 0
 
 def increment():
     BUG += 1
     return
 
-class State:
+class Element:
+    def __init__(self, ID, weight):
+        self.ID = ID
+        self.weight = weight
+        self.adj_list = []
 
+class Edge:
+    def __init__(self, element1, element2):
+        self.element1 = element1
+        self.element2 = element2
+
+class Launch:
+    def __init__(self, date, max_payload, fixed_cost, variable_cost):
+        self.date = date
+        self.max_payload = max_payload
+        self.fixed_cost = fixed_cost
+        self.variable_cost = variable_cost
+
+
+class State:
     def __init__(self, launch, elements_on_space):
         self.Launch = launch
         self.Elements = elements_on_space
@@ -40,8 +59,8 @@ def read_doc(doc_name):
 
     Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
-    Weight = []                     #vetor de peso de componentes de satelite
-    launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
+    #Weight = []                     #vetor de peso de componentes de satelite
+    Launches = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
 
     f = open(doc_name)
     line = f.readline()
@@ -50,21 +69,23 @@ def read_doc(doc_name):
         words = line.split(" ")
         if(words[0] != ""):
             if(words[0][0] == "V"):
-                STATION_PLANT.add_node(words[0])
-                Vertices.append(words[0])
-                Weight.append(float(words[1]))
+                element = Element(words[0], words[1])
+                STATION_PLANT.add_node(element)
+                Vertices.append(element)
+                #Weight.append(float(words[1]))
             if(words[0][0] == "E"):
-                edge_pair = []
-                edge = (words[1], words[2])
-                edge_pair.append(words[1])
-                edge_pair.append(words[2])
-                G.add_edge(*edge)
-                Edges.append(edge_pair)
+                edge = Edge(words[1], words[2])
+                #edge = (words[1], words[2])
+                #edge_pair.append(words[1])
+                #edge_pair.append(words[2])
+                STATION_PLANT.add_edge(edge)
+                Edges.append(edge)
             if(words[0][0] == 'L'):
-                launch_info = []
-                launch_info.append(words[2])
-                launch_info.append(words[3])
-                launch_info.append(words[4])
+                launch = Launch(date(words[1]), words[2], words[3], words[4])
+                Launches.append(launch)
+                #launch_info.append(words[2])
+                #launch_info.append(words[3])
+                #launch_info.append(words[4])
         line = f.readline()
 
     '''
@@ -72,8 +93,10 @@ def read_doc(doc_name):
     plt.savefig("simple_path.png") # save as png
     plt.show() # display
     '''
-    for x in range(0,len(Vertices)):
-        PESOS[Vertices[x]] = Weight[x]
+    Launches.sort(key=Lambda r: r.date)
+    '''preencher lista de adjacentes para cada Element aqui'''
+    #for x in range(0,len(Vertices)):
+        #PESOS[Vertices[x]] = Weight[x]
 
     return Vertices, Edges, launch_datas, G
 
@@ -81,7 +104,7 @@ def read_doc(doc_name):
 def find_all_next_states(previous_node_list, actual_node, max_payload):
     for x in previous_node_list:
         print(x)
-        current_weight = PESOS[actual_node] + PESOS[x]
+        current_weight = PESOS[actual_node] + PESOS[x] '''mudar esta merda'''
 
     if current_weight < max_payload:
 
