@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
+from collections import Counter
 
 DOC = "mir.txt"
 G = nx.Graph()
@@ -33,7 +34,14 @@ class State:
         print ("state print:",self.Launch, self.Elements)
         return
 
+    def compare(s,t):
+        return Counter(s) == Counter(t)
 
+    def compareState(a,b):
+        if(a.Launch == b.Launch & compare(a.Elements,b.Elements)):
+            return True
+        else:
+            return False
 
 
 def read_doc(doc_name):
@@ -76,6 +84,16 @@ def read_doc(doc_name):
         PESOS[Vertices[x]] = Weight[x]
 
     return Vertices, Edges, launch_datas, G
+
+
+
+def addInexistenceState(list_a, list_b):
+    list_out = list(list_a)
+    for s in list_b:
+        for a in list_a:
+            if not State.compareState(a,s):
+                list_out.extend()
+
 
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
@@ -133,6 +151,11 @@ def find_adj_node(node):
     return node_list
 
 
+def compare(s,t):
+    return Counter(s) == Counter(t)
+
+
+
 def main():
     V, E, L, G = read_doc(DOC)
     print(PESOS)
@@ -152,6 +175,10 @@ def main():
         a.print_state()
 
     print (init)
+
+    print (State.compareState(all_states[2],all_states[4]))
+
+
 
 
 if __name__ == "__main__":
