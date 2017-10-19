@@ -53,8 +53,32 @@ class State:
         self.Launch += 1
 
     def save_path(self, past_path):
-        self.path = past_path
-        self.path.append(self.get_element())
+        self.path.append(past_path)
+
+    def set_path(self, new_path):
+        self.path = new_path
+
+
+    def actualize(self,previous_path):
+        self.path = previous_path
+        new_path = []
+        i = 0
+        for a in self.path:             #conta quantidades de elementos existentes em path. ou seja, numero de componentes ja lancados
+            for b in a:
+                i += 1 
+        n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
+        print (self.Elements,self.path)
+        print ("numero de elementos",n)
+        if n == 0:
+            previous_path.append([])
+            print ("count")
+        if (n > 0):
+            for x in range(i,len(self.Elements)):
+                new_path.append(self.Elements[x])
+            print ("old:",self.path, "    new:", new_path)
+            previous_path.append(new_path)
+
+        self.path = previous_path
 
 
 def read_doc(doc_name):
@@ -111,6 +135,7 @@ def isInList(list_a, element):
     for a in list_a:
         if (a == element):
             return True
+    return False
 
 
 def addInexistenceState(list_a, list_b):
@@ -143,19 +168,25 @@ def add_launch(state_list):
     for a in state_list:
         a.increment_launch()
 
-def save_all_path(state_list, past_path):
+#actualiza o path de todos os estados que estao na lista
+#vai primeiro meter o path para chegar ao estado pai e a seguir adiciona o path para chegar o estado atual
+def actualize_path(state_list,previous_path):
     for a in state_list:
-        a.save_path(past_path)
-
+        aux = list(previous_path)
+        a.actualize(aux)
+        
 
 def successor(actual_state):
     childs = []
+    
+    previous_path =  actual_state.get_path()
     childs.append(actual_state)
     childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0))
 
     print (actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0)
     add_launch(childs)
-    save_all_path(childs, actual_state.get_path())
+    print (actual_state.get_path())
+    actualize_path(childs, previous_path)
     print (len(childs))
     for a in childs:
         a.print_state()
@@ -250,6 +281,7 @@ def main():
     print(PESOS)
 
     init = State(0,['VCM'])
+    init.save_path(['VCM'])
     successor(init)
 
     '''
