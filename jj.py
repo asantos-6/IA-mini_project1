@@ -7,6 +7,7 @@ DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
 BUG = 0
+launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
 
 def increment():
     BUG += 1
@@ -17,6 +18,7 @@ class State:
     def __init__(self, launch, elements_on_space):
         self.Launch = launch
         self.Elements = elements_on_space
+        self.path = []
         self.Cost = 0
 
         return
@@ -31,8 +33,11 @@ class State:
     def get_launch(self):
         return self.Launch
 
+    def get_path(self):
+        return self.path
+
     def print_state(self):
-        print ("state print:",self.Launch, self.Elements)
+        print ("state print:",self.Launch, self.Elements,"      path:", self.path)
         return
 
     def compare(s,t):
@@ -44,13 +49,20 @@ class State:
         else:
             return False
 
+    def increment_launch(self):
+        self.Launch += 1
+
+    def save_path(self, past_path):
+        self.path = past_path
+        self.path.append(self.get_element())
+
 
 def read_doc(doc_name):
 
     Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
     Weight = []                     #vetor de peso de componentes de satelite
-    launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
+    
 
     launch_info1 = []
     launch_info2 = []
@@ -83,12 +95,6 @@ def read_doc(doc_name):
     launch_datas.append(launch_info2)
     launch_datas.append(launch_info3)
     
-
-    '''
-    nx.draw(G,with_labels = True)
-    plt.savefig("simple_path.png") # save as png
-    plt.show() # display
-    '''
     for x in range(0,len(Vertices)):
         PESOS[Vertices[x]] = Weight[x]
 
@@ -101,11 +107,60 @@ def isInList(list_a, b):
             return True
     return False
 
+def isInList(list_a, element):
+    for a in list_a:
+        if (a == element):
+            return True
+
+
 def addInexistenceState(list_a, list_b):
     for s in list_b:
         if not isInList(list_a,s):
             list_a.append(s)
 
+
+
+#add a inexistent node to the adjacente node list
+#arguments: orinal list, list to add
+def addInexistentAdjNode(original, additional):
+    for a in additional:
+        if not isInList(original, a):
+            original.append(a)
+
+
+def find_all_adj_nodes(launched_nodes):
+    all_adj_nodes = []
+    if (len(launched_nodes) < 1):
+        for key in PESOS.keys():
+            all_adj_nodes.append(key)
+    else:
+        for a in launched_nodes:
+            addInexistentAdjNode(all_adj_nodes, find_adj_node(a))
+    return all_adj_nodes
+
+
+def add_launch(state_list):
+    for a in state_list:
+        a.increment_launch()
+
+def save_all_path(state_list, past_path):
+    for a in state_list:
+        a.save_path(past_path)
+
+
+def successor(actual_state):
+    childs = []
+    childs.append(actual_state)
+    childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0))
+
+    print (actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0)
+    add_launch(childs)
+    save_all_path(childs, actual_state.get_path())
+    print (len(childs))
+    for a in childs:
+        a.print_state()
+
+    actual_state.print_state()
 
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
@@ -149,7 +204,6 @@ def find_adj_node(node):
     node_list = []
     for key in node_key.keys():
         node_list.append(key)
-    #print (node_list)
     return node_list
 
 
@@ -169,14 +223,39 @@ def findAllLaunchStates(actual_state, launched_nodes, adj_nodes, total_launch,la
     for a in states:
         a.print_state()
 
+
+def check_goal(state):
+    if (len(state.get_element()) == len(PESOS)):
+        return True
+    else:
+        return False
+
+def General_search(problem, strategy):
+    open_list= []
+    close_list = []
+
+    open_list.append(problem.init)
+
+    while(True):
+        if not open_list:
+            return False
+        expansion_node = strategy(open_list)
+        if (check_goal(expansion_node)):
+            return expansion_node.get_element()
+        else:
+            print ("nothing")
+
 def main():
     V, E, L, G = read_doc(DOC)
     print(PESOS)
 
-    init = State(1,[])
+    init = State(0,['VCM'])
+    successor(init)
+
+    '''
     node_list = ['VS', 'VK1', 'VK2', 'VP', 'VPM', 'VSTM', 'VK', 'VDM']
     findAllLaunchStates(init,  init.get_element(), node_list,1,L)
-
+    '''
 
 
 
