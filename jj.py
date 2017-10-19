@@ -68,7 +68,7 @@ class State:
                 i += 1 
         n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
         print (self.Elements,self.path)
-        print ("numero de elementos",n)
+        print ("numero de elementos",n)    
         if n == 0:
             previous_path.append([])
             print ("count")
