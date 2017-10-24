@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import time
 from collections import Counter
 
+MAX = 999999
 DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
@@ -19,7 +20,7 @@ class State:
         self.Launch = launch
         self.Elements = elements_on_space
         self.path = []
-        self.Cost = 0
+        self.Cost = []
 
         return
 
@@ -36,9 +37,23 @@ class State:
     def get_path(self):
         return self.path
 
+    def get_cost(self):
+        return self.Cost
+
+    def get_total_cost(self):
+        total_cost = 0
+        for c in self.Cost:
+            total_cost += c
+        return total_cost
+
+
     def print_state(self):
-        print ("state print:",self.Launch, self.Elements,"      path:", self.path)
+        total_cost = 0
+        for a in self.Cost:
+            total_cost += a
+        print ("state print:",self.Launch, self.Elements,"      path:", self.path, "    cost:", self.Cost, "    total_cost:", total_cost)
         return
+
 
     def compare(s,t):
         return Counter(s) == Counter(t)
@@ -49,6 +64,17 @@ class State:
         else:
             return False
 
+    def is_repeat(node_a, node_b):
+        if node_a.Launch != node_b.Launch:
+            return False
+        if (len(node_a.Elements) != len(node_b.Elements)):
+            return False
+
+        if (set(node_a.Elements) == set(node_b.Elements)):
+            return True
+
+        return False
+
     def increment_launch(self):
         self.Launch += 1
 
@@ -57,6 +83,9 @@ class State:
 
     def set_path(self, new_path):
         self.path = new_path
+
+    def append_cost(self,cost):
+        self.Cost = cost
 
 
     def actualize(self,previous_path):
@@ -67,18 +96,31 @@ class State:
             for b in a:
                 i += 1 
         n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
-        print (self.Elements,self.path)
-        print ("numero de elementos",n)    
         if n == 0:
             previous_path.append([])
-            print ("count")
         if (n > 0):
             for x in range(i,len(self.Elements)):
                 new_path.append(self.Elements[x])
-            print ("old:",self.path, "    new:", new_path)
             previous_path.append(new_path)
 
         self.path = previous_path
+
+    def cost_is_higher(node_a, node_b):
+        cost_a = 0
+        cost_b = 0
+        for c in node_a.Cost:
+            cost_a += c
+        for c in node_b.Cost:
+            cost_b += c
+        if cost_a > cost_b:
+            return False
+        else:
+            return True
+
+    
+
+
+
 
 
 def read_doc(doc_name):
@@ -91,6 +133,7 @@ def read_doc(doc_name):
     launch_info1 = []
     launch_info2 = []
     launch_info3 = []
+    launch_info4 = []
     
     f = open(doc_name)
     line = f.readline()
@@ -113,12 +156,16 @@ def read_doc(doc_name):
                 launch_info1.append(float(words[2]))
                 launch_info2.append(float(words[3]))
                 launch_info3.append(float(words[4]))
+                launch_info4.append((float(words[3]) + float(words[2] * float(words[4]))) / float(words[2]))
         line = f.readline()
 
     launch_datas.append(launch_info1)
     launch_datas.append(launch_info2)
     launch_datas.append(launch_info3)
+    launch_datas.append(launch_info4)
+
     
+    print (launch_datas)
     for x in range(0,len(Vertices)):
         PESOS[Vertices[x]] = Weight[x]
 
@@ -152,15 +199,33 @@ def addInexistentAdjNode(original, additional):
         if not isInList(original, a):
             original.append(a)
 
+def remove_launched_node(adj, launched):
+    remove = []
+    for x in range(0,len(adj)):
+        for y in range(0, len(launched)):
+            if adj[x] == launched[y]:
+                remove.append(x)
+                break
+    
+    print ("remove:", remove)
+    for i in remove[::-1]:
+        # print(i)
+        # print (adj[i])
+        # print (adj,launched)
+        del adj[i]
+
 
 def find_all_adj_nodes(launched_nodes):
     all_adj_nodes = []
-    if (len(launched_nodes) < 1):
+    if (len(launched_nodes) < 1):           #se for primeiro lance, launch = 0, todos nos podem ser "adjacentes"
         for key in PESOS.keys():
             all_adj_nodes.append(key)
     else:
         for a in launched_nodes:
             addInexistentAdjNode(all_adj_nodes, find_adj_node(a))
+    
+    print (all_adj_nodes, launched_nodes)
+    remove_launched_node(all_adj_nodes, launched_nodes)
     return all_adj_nodes
 
 
@@ -175,46 +240,78 @@ def actualize_path(state_list,previous_path):
         aux = list(previous_path)
         a.actualize(aux)
         
+def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
+    
+    for a in state_list:
+        total_cost = launch_datas[1][a.get_launch()]            #fixed cost
+        path = a.get_path()
+        state_cost = a.get_cost()
+        if (len(path) > len(state_cost)):
+            cost_list = list(previous_cost)
+            if (len(path[-1]) == 0):
+                cost_list.append(0)
+                a.append_cost(cost_list)
+            else:
+                for e in path[-1]:
+                    weight = Pesos[e]
+                    total_cost += (launch_datas[2][a.get_launch()] * weight)
+                cost_list.append(total_cost)
+                a.append_cost(cost_list)
+
+def remove_repeat_nodes(node_list):
+    repeat_list = []
+    for x in range(0,len(node_list)):
+        
+        for y in range(x+1,len(node_list)):
+            if State.is_repeat(node_list[x], node_list[y]):
+                repeat_list.append(x)
+                break
+    for i in repeat_list[::-1]:
+        del node_list[i]
+
 
 def successor(actual_state):
     childs = []
+    all_elements = 0
+    previous_path =  actual_state.get_path()            #fica com os caminhos feitos ate aqui
+    for a in previous_path:
+        all_elements += len(a)                          #faz somatorio de todos elementos ja lancados 
+    previous_cost = actual_state.get_cost()             #fica com o custo utilizado para chegar atual estado
     
-    previous_path =  actual_state.get_path()
-    childs.append(actual_state)
-    childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0))
+    if actual_state.get_launch() < len(launch_datas[0]):
+        childs.append(actual_state)
+        childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
 
-    print (actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[actual_state.get_launch()][0], 0)
-    add_launch(childs)
-    print (actual_state.get_path())
-    actualize_path(childs, previous_path)
-    print (len(childs))
-    for a in childs:
-        a.print_state()
+        if (all_elements == 0):
+            remove_repeat_nodes(childs)
 
-    actual_state.print_state()
+        actualize_path(childs, previous_path)
+        actualize_all_cost(childs,previous_cost, launch_datas, PESOS)
+
+
+    
+        add_launch(childs)
+
+
+    return childs
 
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
     next_states = []
+
 
     if (len(adj_nodes) > 0):
         
         new_elements = actual_state.get_element()
         for x in range(0, len(adj_nodes)):
             component_weight = PESOS[adj_nodes[x]]
-            if ((act_weight+component_weight <= max_payload)):
-                    if (len(adj_nodes) ==3):
-                        print ("--------------primeira chamada---------------", new_elements)
-                    
+            if ((act_weight+component_weight <= max_payload)):                  #so adiciona se nao exceder o max payload
                     new_elements = list(actual_state.get_element())
                     new_elements.append(adj_nodes[x])
                     new_elements1 = list(new_elements)
                     current_state = State(actual_state.get_launch(),new_elements1)
                     next_states.append(current_state)
                     del new_elements[-1]
-
-                    print (current_state.getter())
-                    
                     new_launched_nodes = list(launched_nodes)
                     new_launched_nodes.append(adj_nodes[x])
 
@@ -225,11 +322,14 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
                     new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
 
-                    addInexistenceState(next_states,find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))
+                    if (len(adj_nodes) == len(PESOS)):                                          #estes dois linhas sao obras de arte, que corrige o erro dos nos adjacentes quando todos nos sao possiveis para aqueles so sao possiveis apos um componente
+                        new_adj_nodes = find_all_adj_nodes(current_state.get_element())
+
+                    addInexistenceState(next_states,find_all_next_states(current_state, new_launched_nodes, new_adj_nodes, max_payload, new_act_weight))  #so adiciona aqueles estados que ainda nao se encontram na lista e os estados possiveis(que apos todos lances ainda e possivel)
 
     return next_states
 
-
+#find all adjacente nodes
 def find_adj_node(node):
     node_key = G[node]
     node_list = []
@@ -250,9 +350,7 @@ def findAllLaunchStates(actual_state, launched_nodes, adj_nodes, total_launch,la
     for x in range(0,total_launch):
         for y in range(0,len(all_states_in_launch)):
             states = find_all_next_states(all_states_in_launch[y], launched_nodes, adj_nodes, launch_info[x][0], 0)
-    print (len(states))
-    for a in states:
-        a.print_state()
+
 
 
 def check_goal(state):
@@ -261,33 +359,113 @@ def check_goal(state):
     else:
         return False
 
+
+def exist_or_higher_cost(original_list, new_element):
+    for a in original_list:
+        if State.is_repeat(a,new_element):
+            if State.cost_is_higher(a,new_element):
+                return True
+    return False
+
+
+
+def add_new_or_low_cost_state(original_state, new_state):
+    repeat_list = []
+    for x in range(0, len(new_state)):
+        if exist_or_higher_cost(original_state,new_state[x]):
+            repeat_list.append(x)
+
+    for i in repeat_list[::-1]:
+        del new_state[i]
+
+    original_state.extend(new_state)
+
+
+'''
+create a filter that remves impossible nodes
+1 - node with max launch with incomplete satelite
+'''
+def state_filter(node_list):
+    remove = []
+    for x in range(0,len(node_list)):
+        if (node_list[x].get_launch() == len(launch_datas[0])) and (len(node_list[x].get_element()) < len(PESOS)):
+            remove.append(x)
+
+    for i in remove[::-1]:
+        del node_list[i]
+
+
+
+
+
+
+
+
 def General_search(problem, strategy):
     open_list= []
     close_list = []
 
-    open_list.append(problem.init)
+    open_list.append(problem)
 
-    while(True):
+    flag = 1
+    while(flag):
         if not open_list:
             return False
         expansion_node = strategy(open_list)
+        print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
+        expansion_node.print_state()
+
         if (check_goal(expansion_node)):
-            return expansion_node.get_element()
+            return expansion_node.get_path()
         else:
-            print ("nothing")
+
+
+            child_nodes = successor(expansion_node)
+            add_new_or_low_cost_state(open_list, child_nodes)
+
+            state_filter(open_list)
+            #open_list.extend(child_nodes)
+
+
+        flag += 1
+
+    print ("list:---------------------------")
+    print ("list:---------------------------")
+    print ("list:---------------------------")
+    print (len(open_list))
+    for a in open_list:
+        a.print_state()
+
+def uniform_cost(node_list):
+    minimo = MAX
+    index = MAX
+
+    for x in range(0, len(node_list)):
+        if (minimo > node_list[x].get_total_cost()):
+            minimo = node_list[x].get_total_cost()
+            index = x
+    expansion_node = node_list[index]
+    del node_list[index]
+    return expansion_node
+
 
 def main():
     V, E, L, G = read_doc(DOC)
     print(PESOS)
 
-    init = State(0,['VCM'])
-    init.save_path(['VCM'])
-    successor(init)
+    init = State(0,[])
+    # init = State(2,['V1','V2'])
+    # init.save_path([['V1'],['V2']])
+    # print ("gg:",find_all_adj_nodes(init.get_element()))
+    # print (G['V2'])
+    # childs = successor(init)
+    # for a in childs:
+    #     a.print_state()
 
-    '''
-    node_list = ['VS', 'VK1', 'VK2', 'VP', 'VPM', 'VSTM', 'VK', 'VDM']
-    findAllLaunchStates(init,  init.get_element(), node_list,1,L)
-    '''
+    
+    sol = General_search(init,uniform_cost)
+    print ("solution:", sol)
+
 
 
 
