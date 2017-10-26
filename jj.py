@@ -7,6 +7,7 @@ DOC = "mir.txt"
 STATION_PLANT = nx.Graph()
 STATION_ELEMENTS = []
 LAUNCH_GRAPH = nx.Graph()
+NEXT_STATES = []
 #PESOS = dict()
 
 def increment():
@@ -80,9 +81,7 @@ class State:
 
 def read_doc(doc_name):
 
-    #Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
-    #Weight = []                     #vetor de peso de componentes de satelite
     Launches = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
 
     f = open(doc_name)
@@ -95,21 +94,14 @@ def read_doc(doc_name):
                 element = Element(words[0], float(words[1]))
                 STATION_PLANT.add_node(element)
                 STATION_ELEMENTS.append(element)
-                #Weight.append(float(words[1]))
             if(words[0][0] == "E"):
                 edge = Edge(words[1], words[2])
-                #edge = (words[1], words[2])
-                #edge_pair.append(words[1])
-                #edge_pair.append(words[2])
                 STATION_PLANT.add_edge(edge.element1, edge.element2)
                 Edges.append(edge)
             if(words[0][0] == 'L'):
                 words[1]
                 launch = Launch(date(int(words[1][4:8]), int(words[1][2:4]), int(words[1][0:2])), float(words[2]), words[3], words[4])
                 Launches.append(launch)
-                #launch_info.append(words[2])
-                #launch_info.append(words[3])
-                #launch_info.append(words[4])
         line = f.readline()
 
     '''
@@ -117,33 +109,39 @@ def read_doc(doc_name):
     plt.savefig("simple_path.png") # save as png
     plt.show() # display
     '''
-    Launches.sort(key = lambda r: r.launch_date)
+    Launches.sort(key=lambda r: r.launch_date)
 
     for e in STATION_ELEMENTS:
         e.adj_list = find_adj_node(e.ID)
-    #for x in range(0,len(Vertices)):
-        #PESOS[Vertices[x]] = Weight[x]
 
     return STATION_ELEMENTS, Edges, Launches, STATION_PLANT
 
+def state_adj_list(element_list):
+    adj_list = []
+    i = 0
+    adj_list = disjoint_union(element_list[0].adj_list, element_list[1].adj_list)
+
+    for i in range(2, len(element_list)):
+        adj_list = disjoint_union(element_list[i].adj_list, adj_list)
+
+    for y in element_list:
+        adj_list = list(filter(lambda x: x.ID != y.ID, adj_list))
+
+    return adj_list
 
 def expand_state(previous_state, max_payload):
-    next_states = []
+    new_states = []
     if previous_state.launch == 0:
         previous_element_list = []
-
-        #for e in STATION_ELEMENTS
         open_list = STATION_ELEMENTS
     else:
-        previous_element_list = previous_state.elements
-        for y in previous_element_list:
-            for z in previous_element_list:
-                if z != y:
-                    open_list = []
-                    open_list.extend(disjoint_union(z.adj_list, y.adj_list))
-    next_states = combine_elements(previous_state.launch+1, open_list, previous_element_list, next_states, max_payload)
+        previous_element_list = list(previous_state.elements)
+        open_list = state_adj_list(previous_element_list)
 
-    return next_states
+    new_states = combine_elements(previous_state.launch+1, open_list, previous_element_list, [], max_payload)
+    new_states = list(set(new_states))
+
+    return new_states
 
 def combine_elements (launch, elements, previous_element_list, next_states, max_payload):
     total_weight = 0
@@ -159,7 +157,6 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
     print("")
     '''
     for e in elements:
-        #print(e.ID)
         new_states = []
         total_weight = e.weight
         for x in previous_element_list:
@@ -182,29 +179,16 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
                 print(e.ID)
             print("")
             '''
-            #for x in new_elements:
-                #print(x.ID)
             new_state = State(launch, new_elements)
             new_state.elements.sort(key=lambda x: x.ID)
-            #elements = elements.remove(e)
-            #elements = []
             if len(new_elements) == 1:
                 elements = list(new_elements[0].adj_list)
             else:
-                elements = []
-                i = 0
-                elements = disjoint_union(new_elements[0].adj_list, new_elements[1].adj_list)
-
-                for i in range(2, len(new_elements)):
-                    elements = disjoint_union(new_elements[i].adj_list, elements)
-
-                for y in new_elements:
-                    elements = list(filter(lambda x: x.ID != y.ID, elements))
-            #for x in elements:
-                #print(x.ID)
+                elements = state_adj_list(new_elements)
             for e in elements:
                 if not e.adj_list:
                     e.adj_list = find_adj_node(e.ID)
+
             already_there = 0
             for n in new_states:
                 if new_state == n:
@@ -212,6 +196,8 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
                     break
             if not already_there:
                 new_states.append(new_state)
+                NEXT_STATES.append(new_state)
+                #NEXT_STATES = list(set(NEXT_STATES))
             '''
             print("New States:")
             for n in new_states:
@@ -226,6 +212,7 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
     if not new_elements or already_there:
         return []
     else:
+        new_states = list(set(new_states))
         return new_states
 
 def find_adj_node(node):
