@@ -2,6 +2,9 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import time
 from collections import Counter
+import copy
+import scipy as sp
+import numpy as np
 
 MAX = 999999
 MAX_PRICE = 0
@@ -11,6 +14,8 @@ G = nx.Graph()
 PESOS = dict()
 BUG = 0
 launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
+VERTICES = []
+V = []
 
 def increment():
     BUG += 1
@@ -151,7 +156,7 @@ def read_doc(doc_name):
         if(words[0] != ""):
             if(words[0][0] == "V"):
                 G.add_node(words[0])
-                Vertices.append(words[0])
+                VERTICES.append(words[0])
                 Weight.append(float(words[1]))
             if(words[0][0] == "E"):
                 edge_pair = []
@@ -172,12 +177,11 @@ def read_doc(doc_name):
     launch_datas.append(launch_info3)
     launch_datas.append(launch_info4)
 
-    
     print (launch_datas)
-    for x in range(0,len(Vertices)):
-        PESOS[Vertices[x]] = Weight[x]
+    for x in range(0,len( VERTICES)):
+        PESOS[ VERTICES[x]] = Weight[x]
 
-    return Vertices, Edges, launch_datas, G
+    return  VERTICES, Edges, launch_datas, G
 
 
 def isInList(list_a, b):
@@ -191,6 +195,21 @@ def isInList(list_a, element):
         if (a == element):
             return True
     return False
+
+
+#find all combinations
+def combinations(target,data):
+    result = []
+    for i in range(len(data)):
+        new_target = copy.copy(target)
+        new_data = copy.copy(data)
+        new_target.append(data[i])
+        new_data = data[i+1:]
+        #print (new_target)
+        result.append(new_target)
+        result.extend(combinations(new_target,new_data))
+    return result
+
 
 
 def addInexistenceState(list_a, list_b):
@@ -321,11 +340,74 @@ def state_cost_filter(node_list):
         min_index = init
 
         
+#remove all combinations that exceeds total weight situations
+def remove_exceed_weight(node_list, max_payload):
+    remove = []
+
+    for x in range(len(node_list)):
+        total_weight = 0
+        for e in node_list[x]:
+            total_weight += PESOS[e]
+        if total_weight > max_payload:
+            remove.append(x)
+
+    for x in remove[::-1]:
+        del node_list[x]
+
+#remove situaations that the nodes are not all connected in the graph
+def remove_not_connected(node_list, launched_elements):
+
+    remove = []
+
+    for x in range(0, len(node_list)):
+        if len(node_list[x]) >= 2:
+            all_elements = list(launched_elements)
+            all_elements.extend(node_list[x])
+            A = nx.adjacency_matrix(G,all_elements)
+            for y in A.todense():
+                #print (A.todense(), node_list[x])
+                if not np.any(y):
+                    remove.append(x)
+                    #print ("XXXX:", x)
+                    break
+
+
+    for x in remove[::-1]:
+        del node_list[x]
 
 
 
+def find_all_next_states_by_combination(state, max_payload):
+    target = []
+    childs = []
+    all_elements = list(VERTICES)
+    launched_elements = list(state.get_element())
+    #print ("-+-+-+-+-+-:", launched_elements, "all_element:", all_elements)
+    for e in launched_elements:
+        all_elements.remove(e)
+    #print ("all_element after:", all_elements)
 
+    result = combinations(target,all_elements)
 
+    
+    remove_exceed_weight(result, max_payload)
+    remove_not_connected(result, launched_elements)
+
+    
+
+    for e in result:
+        #print (e)
+        previous_launched = list(state.get_element())
+                  
+        #print ("previous:", previous_launched)     
+        previous_launched.extend(e)   
+        new_launched = list(previous_launched)
+        #print ("element::", new_launched) 
+        new_state = State(state.get_launch(),new_launched)
+        #new_state.print_state()
+        childs.append(new_state)
+
+    return  childs
 
 
 
@@ -340,8 +422,15 @@ def successor(actual_state):
     
     if actual_state.get_launch() < len(launch_datas[0]):
         childs.append(actual_state)
-        childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
 
+        if (launch_datas[0][actual_state.get_launch()] > 40):
+            
+            childs.extend(find_all_next_states_by_combination(actual_state, launch_datas[0][actual_state.get_launch()]))
+            
+        else:
+
+            childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
+            
         if (all_elements == 0):
             remove_repeat_nodes(childs)
 
@@ -352,12 +441,14 @@ def successor(actual_state):
     
         add_launch(childs)
 
-    print ("before filter:", len(childs))
-    for a in childs:
-        a.print_state()
+    # print ("before filter:", len(childs))
+    
     state_filter(childs)
+    # print ("-------------child nodes--------------")
+    # for a in childs:
+    #     a.print_state()
     #state_cost_filter(childs)
-    print ("after filter:", len(childs))
+    # print ("after filter:", len(childs))
     return childs
 
 
@@ -378,6 +469,10 @@ def new_nodes(launched_nodes, new):
         del new[x]
     return new
 
+#ordena a lista de nos em ordem crescente de pesos
+def ordine_increase_order(node_list):
+
+    print ("a")
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
     next_states = []
@@ -405,7 +500,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
                 if (len(adj_nodes) == len(PESOS)):                                          #estes dois linhas sao obras de arte, que corrige o erro dos nos adjacentes quando todos nos sao possiveis para aqueles so sao possiveis apos um componente
                     new_adj_nodes = find_all_adj_nodes(new_state.get_element())
-                new_state.print_state()
+                #new_state.print_state()
                 addInexistenceState(next_states,find_all_next_states(new_state, new_state.get_element(), new_adj_nodes, max_payload, new_act_weight))  #so adiciona aqueles estados que ainda nao se encontram na lista e os estados possiveis(que apos todos lances ainda e possivel)
 
     return next_states
@@ -467,28 +562,10 @@ def state_filter(node_list):
             remove.append(x)
             continue
 
-
-        # elements = node_list[x].get_path()
-        # if (len(elements) > INDEX) and (len(elements[INDEX]) > 0):
-        #     print (elements,x)
-        #     remove.append(x)
-        #     continue
-
-        # if (len(elements) == 10) and (len(elements[9]) == 0):
-        #     remove.append(x)
-        #     continue
-
-        # if (len(elements) > 1) and (len(elements[1]) > 0):
-        #     remove.append(x)
-        #     continue
-        # if (len(elements) > 0) and (len(elements[0]) > 0):
-        #     remove.append(x)
-        #     continue
-
     for i in remove[::-1]:
         del node_list[i]
 
-    if (node_list[0].get_launch() >= 2):
+    if (len(node_list) > 0) and (node_list[0].get_launch() >= 2):
         index = 0
         while(True):            #remova todos os nos gerados que possuem os mesmos elementos num lance, ou seja, elimina todos os arranjos
             remove = []
@@ -497,7 +574,6 @@ def state_filter(node_list):
                     if  (is_same_list(node_list[index].get_path_at(node_list[index].get_launch()-1), node_list[y].get_path_at(node_list[y].get_launch()-1))):
                         remove.append(y)
             for i in remove[::-1]:
-                print ("remove!")
                 del node_list[i]
 
             index += 1
@@ -510,7 +586,6 @@ def General_search(problem, strategy):
     close_list = []
 
     open_list.append(problem)
-
     flag = 1
     while(flag):
         if not open_list:
@@ -563,7 +638,7 @@ def main():
             MAX_PRICE = launch_datas[3][a]
             INDEX = a
 
-
+    
     # init = State(9,['VK1','VCM'])
     # init.save_path([[], [], [], [], [],[],[],['VK1'],['VCM']])
 
@@ -579,6 +654,13 @@ def main():
     #         print ("------------------")
     #         a.print_state
     #         print ("------------------")
+    print ("------------matrix----------")
+    A = nx.adjacency_matrix(G,['VCM','VP','VDM','VK','VPM'])
+    print (A.todense())
+    print (type(A.todense()))
+    for x in A.todense():
+        if not np.any(x):
+            print ("chupa")
 
 
 
