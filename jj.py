@@ -5,6 +5,7 @@ from collections import Counter
 import copy
 import scipy as sp
 import numpy as np
+import State
 
 MAX = 999999
 MAX_PRICE = 0
@@ -131,9 +132,6 @@ class State:
             return True
 
     
-
-
-
 
 
 def read_doc(doc_name):
@@ -424,31 +422,21 @@ def successor(actual_state):
         childs.append(actual_state)
 
         if (launch_datas[0][actual_state.get_launch()] > 40):
-            
             childs.extend(find_all_next_states_by_combination(actual_state, launch_datas[0][actual_state.get_launch()]))
-            
         else:
-
             childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
             
         if (all_elements == 0):
             remove_repeat_nodes(childs)
-
         actualize_path(childs, previous_path)
         actualize_all_cost(childs,previous_cost, launch_datas, PESOS)
-
-
     
         add_launch(childs)
 
-    # print ("before filter:", len(childs))
     
     state_filter(childs)
-    # print ("-------------child nodes--------------")
-    # for a in childs:
-    #     a.print_state()
+
     #state_cost_filter(childs)
-    # print ("after filter:", len(childs))
     return childs
 
 
@@ -469,10 +457,7 @@ def new_nodes(launched_nodes, new):
         del new[x]
     return new
 
-#ordena a lista de nos em ordem crescente de pesos
-def ordine_increase_order(node_list):
 
-    print ("a")
 
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
     next_states = []
@@ -557,6 +542,8 @@ create a filter that remves impossible nodes
 def state_filter(node_list):
     remove = []
     elements = []
+
+    #remove states that already reach all uanhces, but still didnt have all components in space
     for x in range(0,len(node_list)):
         if (node_list[x].get_launch() == len(launch_datas[0])) and (len(node_list[x].get_element()) < len(PESOS)): #remove all incomplete launch
             remove.append(x)
@@ -565,9 +552,11 @@ def state_filter(node_list):
     for i in remove[::-1]:
         del node_list[i]
 
+
+    #remova todos os nos gerados que possuem os mesmos elementos num lance, ou seja, elimina todos os arranjos
     if (len(node_list) > 0) and (node_list[0].get_launch() >= 2):
         index = 0
-        while(True):            #remova todos os nos gerados que possuem os mesmos elementos num lance, ou seja, elimina todos os arranjos
+        while(True):            
             remove = []
             for y in range(index+1, len(node_list)):
                 if (len(node_list[index].get_path_at(node_list[index].get_launch()-1)) +len(node_list[index].get_path_at(node_list[y].get_launch()-1)) > 0):
@@ -599,7 +588,7 @@ def General_search(problem, strategy):
         else:
 
             child_nodes = successor(expansion_node)
-            print ("node number:", flag)
+            #print ("node number:", flag)
             add_new_or_low_cost_state(open_list, child_nodes)
 
             #state_filter(open_list)
@@ -608,9 +597,6 @@ def General_search(problem, strategy):
 
         flag += 1
 
-    print ("list:---------------------------")
-    print ("list:---------------------------")
-    print ("list:---------------------------")
     print (len(open_list))
     for a in open_list:
         a.print_state()
@@ -622,6 +608,37 @@ def uniform_cost(node_list):
     for x in range(0, len(node_list)):
         if (minimo > node_list[x].get_total_cost()):
             minimo = node_list[x].get_total_cost()
+            index = x
+    expansion_node = node_list[index]
+    del node_list[index]
+    return expansion_node
+
+def get_heuristic_value(node, total_heuristic_value, average_cost):
+    weight_launched = 0
+
+    for o in node.get_element():
+        weight_launched += PESOS[o]
+
+    g_cost = node.get_total_cost()
+
+    heuristic_value = total_heuristic_value - (average_cost*weight_launched) + g_cost
+
+    return heuristic_value
+
+def A_star(node_list):
+    minimo = MAX
+    index = 0
+
+    average_cost = 2.3
+    total_weight = 138.2
+    total_heuristic_value = average_cost*total_weight
+
+    #heuristic value for node = total_heuristic_value - (launched_weight * avereage_cost)
+
+    for x in range(0, len(node_list)):
+        heuristic_value = get_heuristic_value(node_list[x], total_heuristic_value, average_cost)
+        if (minimo > heuristic_value):
+            minimo = heuristic_value
             index = x
     expansion_node = node_list[index]
     del node_list[index]
@@ -654,21 +671,14 @@ def main():
     #         print ("------------------")
     #         a.print_state
     #         print ("------------------")
-    print ("------------matrix----------")
-    A = nx.adjacency_matrix(G,['VCM','VP','VDM','VK','VPM'])
-    print (A.todense())
-    print (type(A.todense()))
-    for x in A.todense():
-        if not np.any(x):
-            print ("chupa")
-
 
 
     init = State(0,[])
     #init.save_path([[], []])
     #init.save_cost([0, 0])
 
-    sol = General_search(init,uniform_cost)
+    sol = General_search(init,A_star)
+    #sol = General_search(init,uniform_cost)
     print ("solution:", sol)
 
 
