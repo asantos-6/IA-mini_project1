@@ -1,13 +1,14 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import sys
 from datetime import date
 from disjoint_union import *
+from Graph_Search import *
 
-DOC = "mir.txt"
+#DOC = "trivial1.txt"
 STATION_PLANT = nx.Graph()
 STATION_ELEMENTS = []
 LAUNCH_GRAPH = nx.Graph()
-NEXT_STATES = []
 #PESOS = dict()
 
 def increment():
@@ -33,9 +34,9 @@ class Edge:
 class Launch:
     def __init__(self, launch_date, max_payload, fixed_cost, variable_cost):
         self.launch_date = launch_date
-        self.max_payload = max_payload
-        self.fixed_cost = fixed_cost
-        self.variable_cost = variable_cost
+        self.max_payload = float(max_payload)
+        self.fixed_cost = float(fixed_cost)
+        self.variable_cost = float(variable_cost)
 
     def get_info(self, mode):
         if mode == "d":
@@ -49,11 +50,11 @@ class Launch:
 
 
 class State:
-    def __init__(self, launch, elements): #''', path, cost):
+    def __init__(self, launch, elements, previous_state, cost):
         self.launch = launch
         self.elements = elements
-        #self.path = path
-        #self.cost = cost
+        self.previous_state = previous_state
+        self.cost = cost
 
         return
 
@@ -112,40 +113,60 @@ def read_doc(doc_name):
     Launches.sort(key=lambda r: r.launch_date)
 
     for e in STATION_ELEMENTS:
-        e.adj_list = find_adj_node(e.ID)
+        e.adj_list = find_adj_node(e.ID, STATION_PLANT, STATION_ELEMENTS)
 
     return STATION_ELEMENTS, Edges, Launches, STATION_PLANT
 
-def state_adj_list(element_list):
+def state_adj_list(element_list, problem):
     adj_list = []
     i = 0
-    adj_list = disjoint_union(element_list[0].adj_list, element_list[1].adj_list)
 
-    for i in range(2, len(element_list)):
-        adj_list = disjoint_union(element_list[i].adj_list, adj_list)
+    if len(element_list) == 1:
+        adj_list = list(element_list[0].adj_list)
+
+    else:
+        adj_list = disjoint_union(element_list[0].adj_list, element_list[1].adj_list)
+        for i in range(2, len(element_list)):
+            adj_list = disjoint_union(element_list[i].adj_list, adj_list)
 
     for y in element_list:
         adj_list = list(filter(lambda x: x.ID != y.ID, adj_list))
 
+    for e in adj_list:
+        if len(e.adj_list) == 0:
+            e.adj_list = find_adj_node(e.ID, problem.graph, problem.nodes)
+
     return adj_list
 
-def expand_state(previous_state, max_payload):
+def Create_Childs(previous_state, problem):
     new_states = []
-    if previous_state.launch == 0:
+    if previous_state.launch == 0 or (previous_state.launch != 0 and not previous_state.elements):
         previous_element_list = []
-        open_list = STATION_ELEMENTS
+        open_list = problem.nodes
     else:
-        previous_element_list = list(previous_state.elements)
-        open_list = state_adj_list(previous_element_list)
+        previous_element_list = previous_state.elements
+        open_list = state_adj_list(previous_element_list, problem)
+    if previous_state.launch < len(problem.actions):
+        launch = problem.actions[previous_state.launch]
 
-    new_states = combine_elements(previous_state.launch+1, open_list, previous_element_list, [], max_payload)
-    new_states = list(set(new_states))
+        new_states = combine_elements(launch, previous_state, open_list, previous_element_list, [], problem, 1)
+        new_states.append(State(previous_state.launch+1, [], previous_state, 0))
 
-    return new_states
+        new_states = list(set(new_states))
+        new_states.sort(key=lambda r: len(r.elements))
 
-def combine_elements (launch, elements, previous_element_list, next_states, max_payload):
+
+        return new_states
+
+    else:
+        return []
+
+def combine_elements(launch, previous_state, elements, previous_element_list, next_states, problem, first):
     total_weight = 0
+    launch_index = previous_state.launch+1
     new_elements = []
+    for_states = []
+    new_states = next_states
     '''
     print("Elements:")
     for e in elements:
@@ -157,48 +178,28 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
     print("")
     '''
     for e in elements:
-        new_states = []
         total_weight = e.weight
-        for x in previous_element_list:
-            total_weight = total_weight + x.weight
 
-        if total_weight < max_payload:
+        if not first:
+            for x in previous_element_list:
+                total_weight = total_weight + x.weight
+
+        if total_weight <= launch.max_payload:
             new_elements = list(previous_element_list)
-            new_states = list(next_states)
 
-            already_there = 0
-            for x in new_elements:
-                if x.ID == e.ID:
-                    already_there = 1
-                    break
-            if not already_there:
+
+            if e not in new_elements:
                 new_elements.append(e)
+                new_elements.sort(key=lambda r: r.ID)
+
+            adj_elements = state_adj_list(new_elements, problem)
+            #elements.sort(key=lambda r: r.ID)
             '''
             print("New Elements:")
             for e in new_elements:
                 print(e.ID)
             print("")
-            '''
-            new_state = State(launch, new_elements)
-            new_state.elements.sort(key=lambda x: x.ID)
-            if len(new_elements) == 1:
-                elements = list(new_elements[0].adj_list)
-            else:
-                elements = state_adj_list(new_elements)
-            for e in elements:
-                if not e.adj_list:
-                    e.adj_list = find_adj_node(e.ID)
 
-            already_there = 0
-            for n in new_states:
-                if new_state == n:
-                    already_there = 1
-                    break
-            if not already_there:
-                new_states.append(new_state)
-                NEXT_STATES.append(new_state)
-                #NEXT_STATES = list(set(NEXT_STATES))
-            '''
             print("New States:")
             for n in new_states:
                 print(n.launch, end = ": ")
@@ -207,18 +208,51 @@ def combine_elements (launch, elements, previous_element_list, next_states, max_
                 print("")
             print("")
             '''
-            new_states.extend(combine_elements(launch, elements, new_elements, new_states, max_payload))
+            if adj_elements:
+                new_states = (combine_elements(launch, previous_state, adj_elements, new_elements, new_states, problem, 0))
 
-    if not new_elements or already_there:
+
+            insert = 1
+            for n in for_states:
+                if n.launch == launch_index and set(elementID_list(n.elements)) == set(elementID_list(new_elements)):
+                    insert = 0
+                    break
+            if insert:
+                new_state = State(launch_index, new_elements, previous_state, 0)
+                new_states.append(new_state)
+            for_states.extend(new_states)
+    if not new_elements:
         return []
     else:
-        new_states = list(set(new_states))
-        return new_states
+        #new_states = list(set(new_states))
+        return for_states
 
-def find_adj_node(node):
-    node_key = STATION_PLANT[node]
+def calc_cost(launch, state):
+    if state.elements:
+        if state.previous_state.launch == 0:
+            element_list = state.elements
+        else:
+            element_list = disjoint_union(state.elements, state.previous_state.elements)
+        cost = launch.fixed_cost
+        for e in element_list:
+            cost = cost + launch.variable_cost*e.weight
+    else:
+        return 0
+    return cost
+
+
+def elementID_list(element_list):
+    ID_list =[]
+
+    for e in element_list:
+        ID_list.append(e.ID)
+
+    return ID_list
+
+def find_adj_node(node, station_plant, station_elements):
+    node_key = station_plant[node]
     node_list = []
-    elements = list(STATION_ELEMENTS)
+    elements = list(station_elements)
     for key in node_key.keys():
         for e in elements:
             if e.ID == key:
@@ -228,37 +262,46 @@ def find_adj_node(node):
                 break
     return node_list
 
+def init_search(problem):
+    init = State(0, problem.nodes, [], 0)
+    first_launch = Create_Childs(init, problem)
+
+    return first_launch
+
+def Check_Goal(station_elements, state):
+    if len(state.elements) == len(station_elements):
+        return state
+    else:
+        return False
+
+def print_solution(state):
+    if state.previous_state:
+        print_solution(state.previous_state)
+    else:
+        return
+    print(state.launch, end = ':')
+    element_list = disjoint_union(state.elements, state.previous_state.elements)
+    for e in element_list:
+        print(" ", e.ID, end = ',')
+    print(" ", state.cost)
 
 def main():
+    DOC = sys.argv[1]
     STATION_ELEMENTS, E, L, STATION_PLANT = read_doc(DOC)
 
-    init = State(0, STATION_ELEMENTS)
-    first_launch = expand_state(init, 140)
+    '''GRAPH SEARCH'''
+
+    problem = Problem(STATION_ELEMENTS, L, STATION_PLANT)
+    goal = General_Search(problem, "uni")
+
+    print_solution(goal)
+
+    '''
     for x in first_launch:
         print(x.launch, end = ':')
         for e in x.elements:
             print(" ", e.ID, end = ',')
-        print("")
-
-    #(PESOS)
-    #for e in STATION_ELEMENTS:
-        #print(e.get_element(), "->", e.adj_list)
-    #print(STATION_PLANT)
-    #for node in STATION_PLANT:
-        #print (node.get_element())
-    '''
-    init = State(1,['VCM'])
-    print (init.get_info("all"))
-
-    node_list = find_adj_node('VCM')
-
-    print (node_list)
-    node_list = ['VS', 'VK1', 'VK2']
-    all_states = find_all_next_states(init, init.get_info("e"), node_list, 22.8, 5)
-    for a in range(0,len(all_states)):
-        all_states[a].print_state()
-
-    print (init)
+        print(" ", x.cost)
     '''
 
 if __name__ == "__main__":

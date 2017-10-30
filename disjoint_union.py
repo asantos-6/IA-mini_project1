@@ -4,6 +4,7 @@ def unique(a):
 
 def intersect(a, b):
     ''' return the intersection of two lists '''
+    
     return list(set(a) & set(b))
 
 def union(a, b):
@@ -20,4 +21,5 @@ def disjoint_union(a, b):
         for y in u:
             if y == x:
                 d_u.remove(x)
+    d_u = unique(d_u)
     return d_u
