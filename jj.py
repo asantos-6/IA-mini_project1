@@ -570,36 +570,6 @@ def state_filter(node_list):
                 break
 
 
-def General_search(problem, strategy):
-    open_list= []
-    close_list = []
-
-    open_list.append(problem)
-    flag = 1
-    while(flag):
-        if not open_list:
-            return False
-        expansion_node = strategy(open_list)
-        print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
-        expansion_node.print_state()
-
-        if (check_goal(expansion_node)):
-            return expansion_node.get_path()
-        else:
-
-            child_nodes = successor(expansion_node)
-            #print ("node number:", flag)
-            add_new_or_low_cost_state(open_list, child_nodes)
-
-            #state_filter(open_list)
-            #open_list.extend(child_nodes)
-
-
-        flag += 1
-
-    print (len(open_list))
-    for a in open_list:
-        a.print_state()
 
 def uniform_cost(node_list):
     minimo = MAX
@@ -644,6 +614,36 @@ def A_star(node_list):
     del node_list[index]
     return expansion_node
 
+def General_search(problem, strategy):
+    open_list= []
+    close_list = []
+
+    open_list.append(problem)
+    flag = 1
+    while(flag):
+        if not open_list:
+            return False
+        expansion_node = strategy(open_list)
+        print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
+        expansion_node.print_state()
+
+        if (check_goal(expansion_node)):
+            return expansion_node.get_path()
+        else:
+
+            child_nodes = successor(expansion_node)
+            #print ("node number:", flag)
+            add_new_or_low_cost_state(open_list, child_nodes)
+
+            #state_filter(open_list)
+            #open_list.extend(child_nodes)
+
+
+        flag += 1
+
+    print (len(open_list))
+    for a in open_list:
+        a.print_state()
 
 def main():
     V, E, L, G = read_doc(DOC)
@@ -680,9 +680,6 @@ def main():
     sol = General_search(init,A_star)
     #sol = General_search(init,uniform_cost)
     print ("solution:", sol)
-
-
-
 
 if __name__ == "__main__":
     main()
