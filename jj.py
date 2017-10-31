@@ -14,7 +14,7 @@ DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
 BUG = 0
-launch_datas = []               #lista de lista onde contem as informacoes acerca de cada launch, cada lista contem max weight, fixed cost e variable cost
+launch_datas = []               #Matrix containing launch informations
 VERTICES = []
 V = []
 
@@ -105,8 +105,6 @@ def addInexistenceState(list_a, list_b):
         if not isInList(list_a,s):
             list_a.append(s)
 
-
-
 #addInexistentAdjNode: Adds an inexistent node to the adjacent node list
 #Arguments: original list, list to add
 def addInexistentAdjNode(original, additional):
@@ -173,7 +171,8 @@ def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
                 a.append_cost(cost_list)
 
 
-#
+#remove_repeat_nodes: Removes repeated nodes from a list of nodes
+#Arguments: List from which to remove the repeated nodes
 def remove_repeat_nodes(node_list):
     repeat_list = []
     for x in range(0,len(node_list)):
@@ -185,17 +184,18 @@ def remove_repeat_nodes(node_list):
     for i in repeat_list[::-1]:
         del node_list[i]
 
-#compare the components of two lists
+
+#is_same_list: Compares the components of two lists
+#Arguments: Lists to compare
 def is_same_list(list_a, list_b):
     if set(list_a) == set(list_b):
         return True
     else:
         return False
 
-
-
-
-#filtra os estados com o mesmo numero de lances e com os mesmos componentes no espaco, deixando ficar o nó com menor custo
+#state_cost_filter: Filters out the states whith the same number of launches and with the same components already in space,
+#leaving just the state with less cost
+#Arguments: List of states(nodes) to filter out
 def state_cost_filter(node_list):
 
     init = 0
@@ -203,12 +203,9 @@ def state_cost_filter(node_list):
     min_value = node_list[init].get_total_cost()
     remove_list = []
 
-    #node_list = [x for x in node_list if not determine(x)]
-
     bit = 1
     while (bit):
         init += 1
-        #node_list[init].print_state()
 
         for y in range(init, len(node_list)):
             if (len(node_list[init].get_element()) == len(node_list[y].get_element())) and (is_same_list(node_list[init].get_element(), node_list[y].get_element())):
@@ -217,12 +214,10 @@ def state_cost_filter(node_list):
                     min_index = y
                 remove_list.append(y)
 
-        #print (remove_list)
         for i in remove_list[::-1]:
             if i != min_index:
                 del node_list[i]
         remove_list = []
-
 
         if (init + 1) >= len(node_list):
             break
@@ -230,7 +225,8 @@ def state_cost_filter(node_list):
         min_index = init
 
 
-#remove all combinations that exceeds total weight situations
+#remove_exceed_weight: Removes all the combinations that exceed the max payload of a launch
+#Arguments: List of nodes, max payload of a launch
 def remove_exceed_weight(node_list, max_payload):
     remove = []
 
@@ -244,9 +240,9 @@ def remove_exceed_weight(node_list, max_payload):
     for x in remove[::-1]:
         del node_list[x]
 
-#remove situaations that the nodes are not all connected in the graph
+#remove_not_connected: Deletes situations in ehich the nodes are not all connected amongst themselves in station the graph
+#Arguments: List of nodes, already launched elements
 def remove_not_connected(node_list, launched_elements):
-
     remove = []
 
     for x in range(0, len(node_list)):
@@ -261,81 +257,78 @@ def remove_not_connected(node_list, launched_elements):
                     #print ("XXXX:", x)
                     break
 
-
     for x in remove[::-1]:
         del node_list[x]
 
-
-
+#find_all_next_states_by_combination: Given a state as an input, this function returns every possible state that succeeds it by combinations
+#Arguments: State from which to find the succeeding states, max payload
 def find_all_next_states_by_combination(state, max_payload):
     target = []
     childs = []
     all_elements = list(VERTICES)
     launched_elements = list(state.get_element())
-    #print ("-+-+-+-+-+-:", launched_elements, "all_element:", all_elements)
+
+    #Checks which elements are already there or not
     for e in launched_elements:
         all_elements.remove(e)
-    #print ("all_element after:", all_elements)
 
+    #Finds the combinations of a given state
     result = combinations(target,all_elements)
 
-
+    #Removes extra states
     remove_exceed_weight(result, max_payload)
     remove_not_connected(result, launched_elements)
 
-
-
+    #For each element in result, creates all the new states with the updated element list for each state
     for e in result:
-        #print (e)
         previous_launched = list(state.get_element())
 
-        #print ("previous:", previous_launched)
         previous_launched.extend(e)
         new_launched = list(previous_launched)
-        #print ("element::", new_launched)
+
         new_state = State(state.get_launch(),new_launched)
-        #new_state.print_state()
+
         childs.append(new_state)
 
     return  childs
 
-
-
-
+#successor: Finds the next states of a given state by two means possible: combinations or recursive fucntion
+#Arguments: State from which to find the succeeding states
 def successor(actual_state):
     childs = []
     all_elements = 0
-    previous_path =  actual_state.get_path()            #fica com os caminhos feitos ate aqui
+    previous_path = actual_state.get_path()            #Stores preceeding path
     for a in previous_path:
-        all_elements += len(a)                          #faz somatorio de todos elementos ja lancados
-    previous_cost = actual_state.get_cost()             #fica com o custo utilizado para chegar atual estado
+        all_elements += len(a)                          #Sums the amount of elements already launched
+    previous_cost = actual_state.get_cost()             #Stores the previous cost from current state to update the next states
 
     if actual_state.get_launch() < len(launch_datas[0]):
         childs.append(actual_state)
 
+        #If the max payload exceeds a certain weight threshold, find the next states by combinations
         if (launch_datas[0][actual_state.get_launch()] > 40):
             childs.extend(find_all_next_states_by_combination(actual_state, launch_datas[0][actual_state.get_launch()]))
+        #Else, fidnthe next states calling the recursive function designed for this purpose
         else:
             childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
 
         if (all_elements == 0):
             remove_repeat_nodes(childs)
+
+        #Update path and cost of the staes found
         actualize_path(childs, previous_path)
         actualize_all_cost(childs,previous_cost, launch_datas, PESOS)
 
         add_launch(childs)
 
-
+    #Filter the states found
     state_filter(childs)
 
-    #state_cost_filter(childs)
     return childs
 
 
-#This function finds the unlaunched new adjacent nodes
-#Argument:  list of already launched nodes
-#           list of new adjacent nodes of new launched node
-#Return:    list with not launched and adjacent to launched nodes
+#new_nodes: This function finds the unlaunched new adjacent nodes
+#Arguments:  list of already launched nodes,list of new adjacent nodes of the new launched node
 def new_nodes(launched_nodes, new):
     repeat_list = []
 
@@ -343,24 +336,21 @@ def new_nodes(launched_nodes, new):
         for y in range(0, len(launched_nodes)):
             if new[x] == launched_nodes[y]:
                 repeat_list.append(x)
-                #break                                  #optimizacao incerta
 
     for x in repeat_list[::-1]:
         del new[x]
     return new
 
-
-
+#find_all_next_states: Given a state as an input, this function returns every possible state that succeeds it recursively
+#Arguments: State from which to find the succeeding states, already launched nodes, adjacent nodes, max payload, current weight
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
     next_states = []
 
-    #print ("-------------------new------------------------")
     if (len(adj_nodes) > 0):
-
         previous_elements = actual_state.get_element()
         for x in range(0, len(adj_nodes)):
             component_weight = PESOS[adj_nodes[x]]
-            if ((act_weight+component_weight <= max_payload)):                  #so adiciona se nao exceder o max payload
+            if ((act_weight+component_weight <= max_payload)):       #It only adss if it doesn't exceed the max payload
                 previous_launched = list(launched_nodes)
                 new_launched = list(previous_launched)
                 new_launched.append(adj_nodes[x])
@@ -375,17 +365,15 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
                 new_adj_nodes.extend(new_nodes(new_launched, adj_list))
                 new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
 
-                if (len(adj_nodes) == len(PESOS)):                                          #estes dois linhas sao obras de arte, que corrige o erro dos nos adjacentes quando todos nos sao possiveis para aqueles so sao possiveis apos um componente
+                if (len(adj_nodes) == len(PESOS)):   #Não sei o q diga aqui XIA                #estes dois linhas sao obras de arte, que corrige o erro dos nos adjacentes quando todos nos sao possiveis para aqueles so sao possiveis apos um componente
                     new_adj_nodes = find_all_adj_nodes(new_state.get_element())
-                #new_state.print_state()
-                addInexistenceState(next_states,find_all_next_states(new_state, new_state.get_element(), new_adj_nodes, max_payload, new_act_weight))  #so adiciona aqueles estados que ainda nao se encontram na lista e os estados possiveis(que apos todos lances ainda e possivel)
+                addInexistenceState(next_states,find_all_next_states(new_state, new_state.get_element(), new_adj_nodes, max_payload, new_act_weight))  #Only adds those states that are still not accounted for
 
     return next_states
 
 
-#find all adjacente nodes from one node
-#input argument is a state as node
-#return:  a list that contains all adjacent nodes from input node
+#find_adj_node: Finds all adjacent nodes given a node
+#Arguments: State (node)
 def find_adj_node(node):
     node_key = G[node]
     node_list = []
@@ -393,26 +381,22 @@ def find_adj_node(node):
         node_list.append(key)
     return node_list
 
-
-def compare(s,t):
-    return Counter(s) == Counter(t)
-
-
-
+#check_goal: Goal checking function
+#Arguments: State to check wheter if it's a goal state or not
 def check_goal(state):
     if (len(state.get_element()) == len(PESOS)):
         return True
     else:
         return False
 
-
+#exist_or_higher_cost: Checks wether a state already exists or has higher cost than the ones already there
+#Arguments: List of original states, state to check
 def exist_or_higher_cost(original_list, new_element):
     for a in original_list:
         if State.is_repeat(a,new_element):
             if State.cost_is_higher(a,new_element):
                 return True
     return False
-
 
 
 def add_new_or_low_cost_state(original_state, new_state):

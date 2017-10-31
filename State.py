@@ -42,10 +42,6 @@ class State:
         print ("state print:",self.Launch, self.Elements,"      path:", self.path, "    cost:", self.Cost, "    total_cost:", total_cost)
         return
 
-
-    def compare(s,t):
-        return Counter(s) == Counter(t)
-
     def compareState(a,b):
         if(a.Launch == b.Launch & compare(a.Elements,b.Elements)):
             return True
