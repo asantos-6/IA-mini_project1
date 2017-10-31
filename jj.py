@@ -7,6 +7,7 @@ import scipy as sp
 import numpy as np
 from State import State
 from operator import itemgetter
+from Problem import problem
 
 MAX = 999999
 MAX_PRICE = 0
@@ -518,36 +519,25 @@ def A_star(node_list):
     del node_list[index]
     return expansion_node
 
-def General_search(problem, strategy):
+def General_search(problem_1, strategy):
     open_list= []
     close_list = []
-
-    open_list.append(problem)
+    open_list.append(problem_1.get_init())
     flag = 1
+
+    successor = problem_1.get_successor()
     while(flag):
         if not open_list:
             return False
         expansion_node = strategy(open_list)
         print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
         expansion_node.print_state()
-
         if (check_goal(expansion_node)):
             return expansion_node.get_path()
         else:
-
             child_nodes = successor(expansion_node)
-            #print ("node number:", flag)
             add_new_or_low_cost_state(open_list, child_nodes)
-
-            #state_filter(open_list)
-            #open_list.extend(child_nodes)
-
-
         flag += 1
-
-    print (len(open_list))
-    for a in open_list:
-        a.print_state()
 
 def main():
     V, E, L, G = read_doc(DOC)
@@ -581,7 +571,9 @@ def main():
     #init.save_path([[], []])
     #init.save_cost([0, 0])
 
-    sol = General_search(init,A_star)
+    problem_1 = problem(init, successor, 0)
+
+    sol = General_search(problem_1,A_star)
     #sol = General_search(init,uniform_cost)
     print ("solution:", sol)
 
