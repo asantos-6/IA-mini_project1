@@ -46,13 +46,6 @@ def read_doc(doc_name):
     Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
     Weight = []                     #vetor de peso de componentes de satelite
-
-    launch_info0 = []
-    launch_info1 = []
-    launch_info2 = []
-    launch_info3 = []
-    launch_info4 = []
-
     dates = []
     f = open(doc_name)
     line = f.readline()
