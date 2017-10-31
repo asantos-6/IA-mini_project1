@@ -70,7 +70,7 @@ class State:
         self.path = past_path
 
     def save_cost(self, cost):
-        self.Cost = cost       
+        self.Cost = cost
 
 
     def set_path(self, new_path):
@@ -86,7 +86,7 @@ class State:
         i = 0
         for a in self.path:             #conta quantidades de elementos existentes em path. ou seja, numero de componentes ja lancados
             for b in a:
-                i += 1 
+                i += 1
         n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
         if n == 0:
             previous_path.append([])
@@ -108,6 +108,3 @@ class State:
             return False
         else:
             return True
-
-    
-

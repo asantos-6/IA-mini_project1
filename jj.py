@@ -18,135 +18,18 @@ launch_datas = []               #lista de lista onde contem as informacoes acerc
 VERTICES = []
 V = []
 
-def increment():
-    BUG += 1
-    return
-
-
-# class State:
-
-#     def __init__(self, launch, elements_on_space):
-#         self.Launch = launch
-#         self.Elements = elements_on_space
-#         self.path = []
-#         self.Cost = []
-
-#         return
-
-#     def getter(self):
-#         a = [self.Launch,self.Elements]
-#         return a
-
-#     def get_element(self):
-#         return self.Elements
-
-#     def get_launch(self):
-#         return self.Launch
-
-#     def get_path(self):
-#         return self.path
-#     def get_path_at(self, index):
-#         return self.path[index]
-
-#     def get_cost(self):
-#         return self.Cost
-
-#     def get_total_cost(self):
-#         total_cost = 0
-#         for c in self.Cost:
-#             total_cost += c
-#         return total_cost
-
-
-#     def print_state(self):
-#         total_cost = 0
-#         for a in self.Cost:
-#             total_cost += a
-#         print ("state print:",self.Launch, self.Elements,"      path:", self.path, "    cost:", self.Cost, "    total_cost:", total_cost)
-#         return
-
-
-#     def compare(s,t):
-#         return Counter(s) == Counter(t)
-
-#     def compareState(a,b):
-#         if(a.Launch == b.Launch & compare(a.Elements,b.Elements)):
-#             return True
-#         else:
-#             return False
-
-#     def is_repeat(node_a, node_b):
-#         if node_a.Launch != node_b.Launch:
-#             return False
-#         if (len(node_a.Elements) != len(node_b.Elements)):
-#             return False
-
-#         if (set(node_a.Elements) == set(node_b.Elements)):
-#             return True
-
-#         return False
-
-#     def increment_launch(self):
-#         self.Launch += 1
-
-#     def save_path(self, past_path):
-#         self.path = past_path
-
-#     def save_cost(self, cost):
-#         self.Cost = cost       
-
-
-#     def set_path(self, new_path):
-#         self.path = new_path
-
-#     def append_cost(self,cost):
-#         self.Cost = cost
-
-
-#     def actualize(self,previous_path):
-#         self.path = previous_path
-#         new_path = []
-#         i = 0
-#         for a in self.path:             #conta quantidades de elementos existentes em path. ou seja, numero de componentes ja lancados
-#             for b in a:
-#                 i += 1 
-#         n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
-#         if n == 0:
-#             previous_path.append([])
-#         if (n > 0):
-#             for x in range(i,len(self.Elements)):
-#                 new_path.append(self.Elements[x])
-#             previous_path.append(new_path)
-
-#         self.path = previous_path
-
-#     def cost_is_higher(node_a, node_b):
-#         cost_a = 0
-#         cost_b = 0
-#         for c in node_a.Cost:
-#             cost_a += c
-#         for c in node_b.Cost:
-#             cost_b += c
-#         if cost_a > cost_b:
-#             return False
-#         else:
-#             return True
-
-    
-
-
 def read_doc(doc_name):
 
     Vertices = []                   #vetor de vertices do satelite
     Edges = []                      #vetor de edge dos satelite
     Weight = []                     #vetor de peso de componentes de satelite
-    
+
 
     launch_info1 = []
     launch_info2 = []
     launch_info3 = []
     launch_info4 = []
-    
+
     f = open(doc_name)
     line = f.readline()
     while line:
@@ -178,7 +61,7 @@ def read_doc(doc_name):
 
     print (launch_datas)
     for x in range(0,len( VERTICES)):
-        PESOS[ VERTICES[x]] = Weight[x]
+        PESOS[VERTICES[x]] = Weight[x]
 
     return  VERTICES, Edges, launch_datas, G
 
@@ -260,11 +143,11 @@ def actualize_path(state_list,previous_path):
     for a in state_list:
         aux = list(previous_path)
         a.actualize(aux)
-        
+
 
 #Actualiza os custos consoante o ultimo mudanca de estado
 def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
-    
+
     for a in state_list:
         total_cost = launch_datas[1][a.get_launch()]            #fixed cost
         path = a.get_path()
@@ -286,7 +169,7 @@ def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
 def remove_repeat_nodes(node_list):
     repeat_list = []
     for x in range(0,len(node_list)):
-        
+
         for y in range(x+1,len(node_list)):
             if State.is_repeat(node_list[x], node_list[y]):
                 repeat_list.append(x)
@@ -338,7 +221,7 @@ def state_cost_filter(node_list):
         min_value = node_list[init].get_total_cost()
         min_index = init
 
-        
+
 #remove all combinations that exceeds total weight situations
 def remove_exceed_weight(node_list, max_payload):
     remove = []
@@ -388,20 +271,20 @@ def find_all_next_states_by_combination(state, max_payload):
 
     result = combinations(target,all_elements)
 
-    
+
     remove_exceed_weight(result, max_payload)
     remove_not_connected(result, launched_elements)
 
-    
+
 
     for e in result:
         #print (e)
         previous_launched = list(state.get_element())
-                  
-        #print ("previous:", previous_launched)     
-        previous_launched.extend(e)   
+
+        #print ("previous:", previous_launched)
+        previous_launched.extend(e)
         new_launched = list(previous_launched)
-        #print ("element::", new_launched) 
+        #print ("element::", new_launched)
         new_state = State(state.get_launch(),new_launched)
         #new_state.print_state()
         childs.append(new_state)
@@ -416,9 +299,9 @@ def successor(actual_state):
     all_elements = 0
     previous_path =  actual_state.get_path()            #fica com os caminhos feitos ate aqui
     for a in previous_path:
-        all_elements += len(a)                          #faz somatorio de todos elementos ja lancados 
+        all_elements += len(a)                          #faz somatorio de todos elementos ja lancados
     previous_cost = actual_state.get_cost()             #fica com o custo utilizado para chegar atual estado
-    
+
     if actual_state.get_launch() < len(launch_datas[0]):
         childs.append(actual_state)
 
@@ -426,23 +309,23 @@ def successor(actual_state):
             childs.extend(find_all_next_states_by_combination(actual_state, launch_datas[0][actual_state.get_launch()]))
         else:
             childs.extend(find_all_next_states(actual_state, actual_state.get_element(), find_all_adj_nodes(actual_state.get_element()), launch_datas[0][actual_state.get_launch()], 0))
-            
+
         if (all_elements == 0):
             remove_repeat_nodes(childs)
         actualize_path(childs, previous_path)
         actualize_all_cost(childs,previous_cost, launch_datas, PESOS)
-    
+
         add_launch(childs)
 
-    
+
     state_filter(childs)
 
     #state_cost_filter(childs)
     return childs
 
 
-#This function find the unlaunched new adjacent nodes
-#Argument:  list of already launched nodes 
+#This function finds the unlaunched new adjacent nodes
+#Argument:  list of already launched nodes
 #           list of new adjacent nodes of new launched node
 #Return:    list with not launched and adjacent to launched nodes
 def new_nodes(launched_nodes, new):
@@ -465,7 +348,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
     #print ("-------------------new------------------------")
     if (len(adj_nodes) > 0):
-        
+
         previous_elements = actual_state.get_element()
         for x in range(0, len(adj_nodes)):
             component_weight = PESOS[adj_nodes[x]]
@@ -557,7 +440,7 @@ def state_filter(node_list):
     #remova todos os nos gerados que possuem os mesmos elementos num lance, ou seja, elimina todos os arranjos
     if (len(node_list) > 0) and (node_list[0].get_launch() >= 2):
         index = 0
-        while(True):            
+        while(True):
             remove = []
             for y in range(index+1, len(node_list)):
                 if (len(node_list[index].get_path_at(node_list[index].get_launch()-1)) +len(node_list[index].get_path_at(node_list[y].get_launch()-1)) > 0):
@@ -656,7 +539,7 @@ def main():
             MAX_PRICE = launch_datas[3][a]
             INDEX = a
 
-    
+
     # init = State(9,['VK1','VCM'])
     # init.save_path([[], [], [], [], [],[],[],['VK1'],['VCM']])
 
