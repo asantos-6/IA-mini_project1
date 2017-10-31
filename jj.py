@@ -476,7 +476,7 @@ def state_filter(node_list):
             if (index + 1) >= len(node_list):
                 break
 
-#uniform_cost: Search strategy. Selects the state with less cost for expansion
+#uniform_cost: Uniformed cost algorithm/search strategy
 #Arguments: List of states (nodes)
 def uniform_cost(node_list):
     minimo = MAX
@@ -505,7 +505,7 @@ def get_f_value(node, total_heuristic_value, average_cost):
 
     return f_value
 
-#A_star: A* algorithm
+#A_star: A* algorithm/search strategy
 #Arguments: State list to search
 def A_star(node_list):
     minimo = MAX
@@ -518,9 +518,9 @@ def A_star(node_list):
     #heuristic value for node = total_heuristic_value - (launched_weight * avereage_cost)
 
     for x in range(0, len(node_list)):
-        heuristic_value = get_f_value(node_list[x], total_heuristic_value, average_cost)
-        if (minimo > heuristic_value):
-            minimo = heuristic_value
+        f_value = get_f_value(node_list[x], total_heuristic_value, average_cost)
+        if (minimo > f_value):
+            minimo = f_value
             index = x
     expansion_node = node_list[index]
     del node_list[index]
@@ -558,32 +558,11 @@ def main():
             MAX_PRICE = launch_datas[3][a]
             INDEX = a
 
-
-    # init = State(9,['VK1','VCM'])
-    # init.save_path([[], [], [], [], [],[],[],['VK1'],['VCM']])
-
-    # init.save_cost([0, 0, 0, 0, 0,0,0,57.24,52.4])
-    # init.print_state()
-    # childs = successor(init)
-
-    # print ("len:", len(childs))
-    # for a in childs:
-    #     a.print_state()
-
-    #     if (len(a.get_element()) == 9):
-    #         print ("------------------")
-    #         a.print_state
-    #         print ("------------------")
-
-
     init = State(0,[])
-    #init.save_path([[], []])
-    #init.save_cost([0, 0])
 
     problem_1 = problem(init, successor, 0)
 
     sol = General_search(problem_1,A_star)
-    #sol = General_search(init,uniform_cost)
     print ("solution:", sol)
 
 if __name__ == "__main__":
