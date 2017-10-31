@@ -22,7 +22,7 @@ V = []
 
 def get_launch_data(data):
     data.sort(key = lambda row: row[0])
-    launch_info0 = []
+    launch_info0 = []               #List with each launch date
     launch_info1 = []               #List with each launch max payload
     launch_info2 = []               #List with each launch fixed cost
     launch_info3 = []               #List with each launc variable cost
@@ -89,7 +89,7 @@ def read_doc(doc_name):
                 dates.append(date)
 
         line = f.readline()
-    
+
     get_launch_data(dates)
 
 
@@ -426,28 +426,31 @@ def exist_or_higher_cost(original_list, new_element):
                 return True
     return False
 
-
-def add_new_or_low_cost_state(original_state, new_state):
+#add_new_or_low_cost_state: Replaces a state if the algorithm finds a same state with less cost
+#Arguments: List of original states, list of new states
+def add_new_or_low_cost_state(original_states, new_states):
     repeat_list = []
-    for x in range(0, len(new_state)):
-        if exist_or_higher_cost(original_state,new_state[x]):
+    for x in range(0, len(new_states)):
+        if exist_or_higher_cost(original_states,new_states[x]):
             repeat_list.append(x)
 
     for i in repeat_list[::-1]:
-        del new_state[i]
+        del new_states[i]
 
-    original_state.extend(new_state)
+    original_states.extend(new_states)
 
 
 '''
 create a filter that remves impossible nodes
 1 - node with max launch with incomplete satelite
 '''
+#state_filter: Filters out impossible states. Ex.: State that exhausted all the launches but still hasn't all elements in the outer space
+#Arguments: List of nodes to filter
 def state_filter(node_list):
     remove = []
     elements = []
 
-    #remove states that already reach all uanhces, but still didnt have all components in space
+    #Removes states that already reach all launches, but still didn't have all components in the outer space
     for x in range(0,len(node_list)):
         if (node_list[x].get_launch() == len(launch_datas[0])) and (len(node_list[x].get_element()) < len(PESOS)): #remove all incomplete launch
             remove.append(x)
@@ -456,8 +459,7 @@ def state_filter(node_list):
     for i in remove[::-1]:
         del node_list[i]
 
-
-    #remova todos os nos gerados que possuem os mesmos elementos num lance, ou seja, elimina todos os arranjos
+    #Removes all the states that have the same elements, independtly of the order of which they were sent or built
     if (len(node_list) > 0) and (node_list[0].get_launch() >= 2):
         index = 0
         while(True):
@@ -473,8 +475,8 @@ def state_filter(node_list):
             if (index + 1) >= len(node_list):
                 break
 
-
-
+#uniform_cost: Search strategy. Selects the state with less cost for expansion
+#Arguments: List of states (nodes)
 def uniform_cost(node_list):
     minimo = MAX
     index = MAX
@@ -487,18 +489,23 @@ def uniform_cost(node_list):
     del node_list[index]
     return expansion_node
 
-def get_heuristic_value(node, total_heuristic_value, average_cost):
+#get_f_value: Returns the f value of a given state
+#Arguments: State (node), heuristic value up until that state, average cost
+def get_f_value(node, total_heuristic_value, average_cost):
     weight_launched = 0
 
     for o in node.get_element():
         weight_launched += PESOS[o]
 
     g_cost = node.get_total_cost()
+    h_value = total_heuristic_value - (average_cost*weight_launched)
 
-    heuristic_value = total_heuristic_value - (average_cost*weight_launched) + g_cost
+    f_value = h_value + g_cost
 
-    return heuristic_value
+    return f_value
 
+#A_star: A* algorithm
+#Arguments: State list to search
 def A_star(node_list):
     minimo = MAX
     index = 0
@@ -510,7 +517,7 @@ def A_star(node_list):
     #heuristic value for node = total_heuristic_value - (launched_weight * avereage_cost)
 
     for x in range(0, len(node_list)):
-        heuristic_value = get_heuristic_value(node_list[x], total_heuristic_value, average_cost)
+        heuristic_value = get_f_value(node_list[x], total_heuristic_value, average_cost)
         if (minimo > heuristic_value):
             minimo = heuristic_value
             index = x
@@ -518,6 +525,8 @@ def A_star(node_list):
     del node_list[index]
     return expansion_node
 
+#General_search: General search algorithm (problem independent)
+#Arguments: Problem definition, strategy to implement
 def General_search(problem, strategy):
     open_list= []
     close_list = []
