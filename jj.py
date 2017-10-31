@@ -18,17 +18,19 @@ launch_datas = []               #lista de lista onde contem as informacoes acerc
 VERTICES = []
 V = []
 
+#read_doc: Reads the input document and returns the read data
+#Arguments: text file to be read
 def read_doc(doc_name):
 
-    Vertices = []                   #vetor de vertices do satelite
-    Edges = []                      #vetor de edge dos satelite
-    Weight = []                     #vetor de peso de componentes de satelite
+    Vertices = []                   #Vertices list
+    Edges = []                      #Satelite edges
+    Weight = []                     #Component weights list
 
 
-    launch_info1 = []
-    launch_info2 = []
-    launch_info3 = []
-    launch_info4 = []
+    launch_info1 = []               #List with each launch max payload
+    launch_info2 = []               #List with each launch fixed cost
+    launch_info3 = []               #List with each launc variable cost
+    launch_info4 = []               #List with each launch cost per unit weight
 
     f = open(doc_name)
     line = f.readline()
@@ -36,10 +38,12 @@ def read_doc(doc_name):
         line = line.replace("\n","")
         words = line.split(" ")
         if(words[0] != ""):
+            #Reading the vertices from the input file
             if(words[0][0] == "V"):
                 G.add_node(words[0])
                 VERTICES.append(words[0])
                 Weight.append(float(words[1]))
+            #Reading the edges from the input file
             if(words[0][0] == "E"):
                 edge_pair = []
                 edge = (words[1], words[2])
@@ -47,6 +51,7 @@ def read_doc(doc_name):
                 edge_pair.append(words[2])
                 G.add_edge(*edge)
                 Edges.append(edge_pair)
+            #Reading the launches from the input file
             if(words[0][0] == 'L'):
                 launch_info1.append(float(words[2]))
                 launch_info2.append(float(words[3]))
@@ -54,6 +59,7 @@ def read_doc(doc_name):
                 launch_info4.append(((float(words[3]) + float(words[2]) * float(words[4]))) / float(words[2]))
         line = f.readline()
 
+    #The information of the launches is stored in a list called launch_datas
     launch_datas.append(launch_info1)
     launch_datas.append(launch_info2)
     launch_datas.append(launch_info3)
@@ -65,7 +71,8 @@ def read_doc(doc_name):
 
     return  VERTICES, Edges, launch_datas, G
 
-
+#isInList: Checks if a state/element is in a list
+#Arguments: list to check, state/element to check if it's in the list
 def isInList(list_a, b):
     for e in list_a:
         if State.compareState(e,b):
@@ -78,8 +85,8 @@ def isInList(list_a, element):
             return True
     return False
 
-
-#find all combinations
+#combinations: Finds all combinations (??)
+#Arguments: (??)
 def combinations(target,data):
     result = []
     for i in range(len(data)):
@@ -87,13 +94,12 @@ def combinations(target,data):
         new_data = copy.copy(data)
         new_target.append(data[i])
         new_data = data[i+1:]
-        #print (new_target)
         result.append(new_target)
         result.extend(combinations(new_target,new_data))
     return result
 
-
-
+#addInexistenceState: Adds an inexistent state from one list to another list
+#Arguments: list to add elements, list from which the elements will be added to the other
 def addInexistenceState(list_a, list_b):
     for s in list_b:
         if not isInList(list_a,s):
@@ -101,8 +107,8 @@ def addInexistenceState(list_a, list_b):
 
 
 
-#add a inexistent node to the adjacente node list
-#arguments: orinal list, list to add
+#addInexistentAdjNode: Adds an inexistent node to the adjacent node list
+#Arguments: original list, list to add
 def addInexistentAdjNode(original, additional):
     for a in additional:
         if not isInList(original, a):
@@ -119,7 +125,8 @@ def remove_launched_node(adj, launched):
         del adj[i]
 
 
-#find all adjacent nodes of a list of input nodes
+#find_all_adj_nodes: Finds all the adjacent nodes to a set of nodes
+#Arguments: Set of nodes to check adjacent node
 def find_all_adj_nodes(launched_nodes):
     all_adj_nodes = []
     if (len(launched_nodes) < 1):           #se for primeiro lance, launch = 0, todos nos podem ser "adjacentes"
@@ -132,24 +139,25 @@ def find_all_adj_nodes(launched_nodes):
     return all_adj_nodes
 
 
-#incrementa o numeo de launch de um estado
+#add_launch: Increments the launch index for each state in a list of states
+#Arguments: List of states
 def add_launch(state_list):
     for a in state_list:
         a.increment_launch()
 
-#actualiza o path de todos os estados que estao na lista
-#vai primeiro meter o path para chegar ao estado pai e a seguir adiciona o path para chegar o estado atual
+#actualize_path: Updates the path of every state that is in state_list. First it finds the previous path up to the father node
+#and then it adds the path from the father node to cureent (child) node
+#Arguments: List of states to update path, previous path
 def actualize_path(state_list,previous_path):
     for a in state_list:
         aux = list(previous_path)
         a.actualize(aux)
 
-
-#Actualiza os custos consoante o ultimo mudanca de estado
+#actualize_all_cost: Updates all state costs regarding the last state change
+#Arguments: List of states, previous cost, launch information, weights dictionary
 def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
-
     for a in state_list:
-        total_cost = launch_datas[1][a.get_launch()]            #fixed cost
+        total_cost = launch_datas[1][a.get_launch()]       #fixed cost
         path = a.get_path()
         state_cost = a.get_cost()
         if (len(path) > len(state_cost)):
@@ -165,7 +173,7 @@ def actualize_all_cost(state_list, previous_cost, launch_datas, Pesos):
                 a.append_cost(cost_list)
 
 
-
+#
 def remove_repeat_nodes(node_list):
     repeat_list = []
     for x in range(0,len(node_list)):
