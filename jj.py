@@ -6,6 +6,7 @@ import copy
 import scipy as sp
 import numpy as np
 from State import State
+from operator import itemgetter
 
 MAX = 999999
 MAX_PRICE = 0
@@ -18,6 +19,30 @@ launch_datas = []               #Matrix containing launch informations
 VERTICES = []
 V = []
 
+
+def get_launch_data(data):
+    data.sort(key = lambda row: row[0])
+    launch_info0 = []
+    launch_info1 = []               #List with each launch max payload
+    launch_info2 = []               #List with each launch fixed cost
+    launch_info3 = []               #List with each launc variable cost
+    launch_info4 = []               #List with each launch cost per unit weight
+
+    for d in data:
+        launch_info0.append(d[0])
+        launch_info1.append(d[1])
+        launch_info2.append(d[2])
+        launch_info3.append(d[3])
+        launch_info4.append(d[4])
+
+    #The information of the launches is stored in a list called launch_datas
+    launch_datas.append(launch_info1)
+    launch_datas.append(launch_info2)
+    launch_datas.append(launch_info3)
+    launch_datas.append(launch_info4)
+    launch_datas.append(launch_info0)
+
+
 #read_doc: Reads the input document and returns the read data
 #Arguments: text file to be read
 def read_doc(doc_name):
@@ -27,11 +52,13 @@ def read_doc(doc_name):
     Weight = []                     #Component weights list
 
 
-    launch_info1 = []               #List with each launch max payload
-    launch_info2 = []               #List with each launch fixed cost
-    launch_info3 = []               #List with each launc variable cost
-    launch_info4 = []               #List with each launch cost per unit weight
 
+def read_doc(doc_name):
+
+    Vertices = []                   #vetor de vertices do satelite
+    Edges = []                      #vetor de edge dos satelite
+    Weight = []                     #vetor de peso de componentes de satelite
+    dates = []
     f = open(doc_name)
     line = f.readline()
     while line:
@@ -53,17 +80,18 @@ def read_doc(doc_name):
                 Edges.append(edge_pair)
             #Reading the launches from the input file
             if(words[0][0] == 'L'):
-                launch_info1.append(float(words[2]))
-                launch_info2.append(float(words[3]))
-                launch_info3.append(float(words[4]))
-                launch_info4.append(((float(words[3]) + float(words[2]) * float(words[4]))) / float(words[2]))
-        line = f.readline()
+                date = []
+                date.append(int(words[1][4:8] + words[1][2:4] + words[1][0:2]))
+                date.append(float(words[2]))
+                date.append(float(words[3]))
+                date.append(float(words[4]))
+                date.append(((float(words[3]) + float(words[2]) * float(words[4]))) / float(words[2]))
+                dates.append(date)
 
-    #The information of the launches is stored in a list called launch_datas
-    launch_datas.append(launch_info1)
-    launch_datas.append(launch_info2)
-    launch_datas.append(launch_info3)
-    launch_datas.append(launch_info4)
+        line = f.readline()
+    
+    get_launch_data(dates)
+
 
     print (launch_datas)
     for x in range(0,len( VERTICES)):
