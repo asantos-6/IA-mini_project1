@@ -1,4 +1,5 @@
 import networkx as nx
+import sys
 import matplotlib.pyplot as plt
 import time
 from collections import Counter
@@ -494,14 +495,38 @@ def General_search(problem_1, strategy):
         print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
         expansion_node.print_state()
         if (check_goal(expansion_node)):
-            return expansion_node.get_path()
+            return expansion_node
         else:
             child_nodes = successor(expansion_node)
             add_new_or_low_cost_state(open_list, child_nodes)
         flag += 1
         
 
+
+def write_output_file(solution_node, doc_name):
+    doc = doc_name.split(".")
+    out_file = doc[0] + '.out'
+    f = open(out_file, 'w')
+    path = solution_node.get_path()
+    cost = solution_node.get_cost()
+    for x in range(len(path)):
+        if len(path[x]) > 0:
+            string = ''
+            for e in path[x]:
+                string += ' '
+                string += e 
+            words = str(launch_datas[4][x])
+            date = (words[6:8] + words[4:6] + words[0:4])
+            line = date + "    " + string + "    " + str(cost[x]) +'\n'
+            print (line)
+            f.write(line)
+    total_cost = solution_node.get_total_cost()
+    f.write(str(total_cost))
+    f.close()
+
 def main():
+    MODE = sys.argv[1]
+    DOC = sys.argv[2]
     V, E, L, G = read_doc(DOC)
     print(PESOS)
     MAX_PRICE = 0
@@ -512,13 +537,14 @@ def main():
             INDEX = a
 
     init = State(0,[])
-
     problem_1 = problem(init, successor, 0)
 
-    #sol = General_search(problem_1, Selection.uniform_cost)
-    sol = General_search(problem_1,Selection.A_star)
+    if MODE == '-i':
+        sol = General_search(problem_1,Selection.A_star)
+    if MODE == '-u':
+        sol = General_search(problem_1, Selection.uniform_cost)
 
-    print ("solution:", sol)
+    write_output_file(sol, DOC)
 
 if __name__ == "__main__":
     main()
