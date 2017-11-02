@@ -1,7 +1,7 @@
 import networkx as nx
 import sys
-import matplotlib.pyplot as plt
 import time
+import sys
 from collections import Counter
 import copy
 import scipy as sp
@@ -21,6 +21,18 @@ BUG = 0
 launch_datas = []               #Matrix containing launch informations
 VERTICES = []
 V = []
+HEURISTIC_VALUE = []            #best heuristic value from each launch, tem a melhor heuristic apatir da determinada lance, por exemplo no index 1, tem o valor de heuristica pos lance 1
+
+
+#replace all whitaspaces to one whitespace
+def removeWhitespaces(line):
+    result = ""
+    prevChar= " "
+    for c in line:
+        if not(prevChar==" "and c==prevChar):
+            result += c
+        prevChar = c
+    return result
 
 
 def get_launch_data(data):
@@ -38,6 +50,19 @@ def get_launch_data(data):
         launch_info3.append(d[3])
         launch_info4.append(d[4])
 
+    for x in range(0, len(launch_info4)):
+        minimo = launch_info4[x]
+        index = x
+        for y in range(x, len(launch_info4)):
+            if minimo > launch_info4[y]:
+                minimo = launch_info4[y]
+                index = y
+        HEURISTIC_VALUE.append(minimo)
+
+    
+
+
+
     #The information of the launches is stored in a list called launch_datas
     launch_datas.append(launch_info1)
     launch_datas.append(launch_info2)
@@ -47,25 +72,21 @@ def get_launch_data(data):
 
 
 #read_doc: Reads the input document and returns the read data
-#Arguments: text file to be read
+#Arguments: Text file to be read
 def read_doc(doc_name):
 
     Vertices = []                   #Vertices list
     Edges = []                      #Satelite edges
     Weight = []                     #Component weights list
-
-
-
-def read_doc(doc_name):
-
-    Vertices = []                   #vetor de vertices do satelite
-    Edges = []                      #vetor de edge dos satelite
-    Weight = []                     #vetor de peso de componentes de satelite
     dates = []
     f = open(doc_name)
+    if not f:
+        print("Error reading text file")
+        exit(0)
     line = f.readline()
     while line:
         line = line.replace("\n","")
+        line = removeWhitespaces(line)
         words = line.split(" ")
         if(words[0] != ""):
             #Reading the vertices from the input file
@@ -491,18 +512,18 @@ def General_search(problem_1, strategy):
     while(flag):
         if not open_list:
             return False
-        expansion_node = strategy(open_list, PESOS)
-        print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
-        expansion_node.print_state()
+        expansion_node = strategy(open_list, PESOS, HEURISTIC_VALUE)
+        #print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
+        #expansion_node.print_state()
         if (check_goal(expansion_node)):
             return expansion_node
         else:
             child_nodes = successor(expansion_node)
             add_new_or_low_cost_state(open_list, child_nodes)
         flag += 1
-        
 
 
+#creates a output file with correct format
 def write_output_file(solution_node, doc_name):
     doc = doc_name.split(".")
     out_file = doc[0] + '.out'
@@ -526,7 +547,20 @@ def write_output_file(solution_node, doc_name):
 
 def main():
     MODE = sys.argv[1]
+    if sys.argv[1] == "-u":
+        method = Selection.uniform_cost
+    else:
+        if sys.argv[1] == "-i":
+            method = Selection.A_star
+        else:
+            print("Please use the right configuration for the problem:")
+            print("pyhton jj.py method filename.txt")
+            print("")
+            print("method: '-u' for uninformed search, '-i' for informed search")
+            exit(0)
+
     DOC = sys.argv[2]
+
     V, E, L, G = read_doc(DOC)
     print(PESOS)
     MAX_PRICE = 0
@@ -538,11 +572,7 @@ def main():
 
     init = State(0,[])
     problem_1 = problem(init, successor, 0)
-
-    if MODE == '-i':
-        sol = General_search(problem_1,Selection.A_star)
-    if MODE == '-u':
-        sol = General_search(problem_1, Selection.uniform_cost)
+    sol = General_search(problem_1,method)
 
     write_output_file(sol, DOC)
 

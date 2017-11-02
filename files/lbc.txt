@@ -1,0 +1,39 @@
+# vertices
+VA  20.4
+VB   20.4
+VC   20.4
+VD  7.15
+VE  7.15
+VF   7.15
+VG   20.4
+VH   7.15
+VI  7.15
+VJ  7.15
+VK  7.15
+VL 20.4
+VM 7.15
+
+# edges
+E VA VB
+E VA VC
+E VA VG
+E VA VL
+E VC VD
+E VC VE
+E VL VM
+E VL VK
+E VG VF
+E VG VH
+E VG VF
+E VB VI
+E VB VJ
+
+# launches
+L 14082017 22.8   62 0.4
+L 10112017 22.8   62 0.4
+L 26012018 70     85 1.2
+L 14032018 30   132 1.6
+L 06062018 22.8   49 0.4
+L 22062018 22.8   49 0.4
+
+

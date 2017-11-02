@@ -4,7 +4,7 @@
 MAX = 999999
 #uniform_cost: Uniformed cost algorithm/search strategy
 #Arguments: List of states (nodes)
-def uniform_cost(node_list, PESOS):
+def uniform_cost(node_list, PESOS, HEURISTIC_VALUE):
     minimo = MAX
     index = MAX
 
@@ -19,14 +19,14 @@ def uniform_cost(node_list, PESOS):
 
 #get_f_value: Returns the f value of a given state
 #Arguments: State (node), heuristic value up until that state, average cost
-def get_f_value(node, total_heuristic_value, average_cost, PESOS):
+def get_f_value(node, total_weight, average_cost, PESOS):
     weight_launched = 0
 
     for o in node.get_element():
         weight_launched += PESOS[o]
 
     g_cost = node.get_total_cost()
-    h_value = total_heuristic_value - (average_cost*weight_launched)
+    h_value = average_cost* (total_weight - weight_launched)
 
     f_value = h_value + g_cost
 
@@ -34,18 +34,21 @@ def get_f_value(node, total_heuristic_value, average_cost, PESOS):
 
 #A_star: A* algorithm/search strategy
 #Arguments: State list to search
-def A_star(node_list, PESOS):
+def A_star(node_list, PESOS, HEURISTIC_VALUE):
     minimo = MAX
     index = 0
 
-    average_cost = 2.3
-    total_weight = 138.2
+    average_cost = HEURISTIC_VALUE[0]
+    total_weight = 0
+    for o in PESOS.values():
+    	total_weight += o
+
     total_heuristic_value = average_cost*total_weight
 
     #heuristic value for node = total_heuristic_value - (launched_weight * avereage_cost)
 
     for x in range(0, len(node_list)):
-        f_value = get_f_value(node_list[x], total_heuristic_value, average_cost, PESOS)
+        f_value = get_f_value(node_list[x], total_weight, HEURISTIC_VALUE[node_list[x].get_launch()-1], PESOS)
         if (minimo > f_value):
             minimo = f_value
             index = x

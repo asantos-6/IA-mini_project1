@@ -1,0 +1,27 @@
+# vertices Vid weight
+VA 1
+VB 2 
+VC 3 
+VD 3 
+VE 4
+VF 2 
+VG 4 
+VH 1
+VI 1
+
+# edges  E Vid1 Vid2
+E VA VB
+E VE VB
+E VC VB
+E VD VB
+E VD VF
+E VF VG
+E VH VF
+E VH VI
+
+# launches  L date max_payload fixed_cost variable_cost
+L 01012000 5 2 1 
+L 02012000 2 1 1 
+L 03012000 2 1 1 
+L 04012000 4 1 1 
+L 05012000 8 2 1 
