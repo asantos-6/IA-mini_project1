@@ -1,6 +1,7 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import time
+import sys
 from collections import Counter
 import copy
 import scipy as sp
@@ -46,22 +47,17 @@ def get_launch_data(data):
 
 
 #read_doc: Reads the input document and returns the read data
-#Arguments: text file to be read
+#Arguments: Text file to be read
 def read_doc(doc_name):
 
     Vertices = []                   #Vertices list
     Edges = []                      #Satelite edges
     Weight = []                     #Component weights list
-
-
-
-def read_doc(doc_name):
-
-    Vertices = []                   #vetor de vertices do satelite
-    Edges = []                      #vetor de edge dos satelite
-    Weight = []                     #vetor de peso de componentes de satelite
     dates = []
     f = open(doc_name)
+    if not f:
+        print("Error reading text file")
+        exit(0)
     line = f.readline()
     while line:
         line = line.replace("\n","")
@@ -502,13 +498,22 @@ def General_search(problem_1, strategy):
 
 
 def main():
-    DOC = sys.argv[1]
+    if sys.argv[1] == "-u":
+        method = Selection.uniform_cost
+    if sys.argv[1] == "-i":
+        method = Selection.A_star
+    else:
+        print("Please use the right configuration for the problem:")
+        print("pyhton jj.py method filename.txt")
+        print("")
+        print("method: '-u' for uninformed search, '-i' for informed search")
+        exit(0)
+
+    DOC = sys.argv[2]
 
     V, E, L, G = read_doc(DOC)
     print(PESOS)
     MAX_PRICE = 0
-
-    print("Graph: ", G)
 
     for a in range(0,len(launch_datas[3])):
         if MAX_PRICE < launch_datas[3][a]:
@@ -519,8 +524,7 @@ def main():
 
     problem_1 = problem(init, successor, 0)
 
-    #sol = General_search(problem_1, Selection.uniform_cost)
-    sol = General_search(problem_1,Selection.A_star)
+    sol = General_search(problem_1,method)
 
     print ("solution:", sol)
 
