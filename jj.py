@@ -553,6 +553,8 @@ def main():
     print(PESOS)
     MAX_PRICE = 0
 
+    print("Graph: ", G)
+
     for a in range(0,len(launch_datas[3])):
         if MAX_PRICE < launch_datas[3][a]:
             MAX_PRICE = launch_datas[3][a]
