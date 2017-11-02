@@ -499,9 +499,11 @@ def General_search(problem_1, strategy):
             child_nodes = successor(expansion_node)
             add_new_or_low_cost_state(open_list, child_nodes)
         flag += 1
-        
+
 
 def main():
+    DOC = sys.argv[1]
+
     V, E, L, G = read_doc(DOC)
     print(PESOS)
     MAX_PRICE = 0
