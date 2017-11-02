@@ -8,6 +8,7 @@ import numpy as np
 from State import State
 from operator import itemgetter
 from Problem import problem
+import Selection
 
 MAX = 999999
 MAX_PRICE = 0
@@ -476,55 +477,6 @@ def state_filter(node_list):
             if (index + 1) >= len(node_list):
                 break
 
-#uniform_cost: Uniformed cost algorithm/search strategy
-#Arguments: List of states (nodes)
-def uniform_cost(node_list):
-    minimo = MAX
-    index = MAX
-
-    for x in range(0, len(node_list)):
-        if (minimo > node_list[x].get_total_cost()):
-            minimo = node_list[x].get_total_cost()
-            index = x
-    expansion_node = node_list[index]
-    del node_list[index]
-    return expansion_node
-
-#get_f_value: Returns the f value of a given state
-#Arguments: State (node), heuristic value up until that state, average cost
-def get_f_value(node, total_heuristic_value, average_cost):
-    weight_launched = 0
-
-    for o in node.get_element():
-        weight_launched += PESOS[o]
-
-    g_cost = node.get_total_cost()
-    h_value = total_heuristic_value - (average_cost*weight_launched)
-
-    f_value = h_value + g_cost
-
-    return f_value
-
-#A_star: A* algorithm/search strategy
-#Arguments: State list to search
-def A_star(node_list):
-    minimo = MAX
-    index = 0
-
-    average_cost = 2.3
-    total_weight = 138.2
-    total_heuristic_value = average_cost*total_weight
-
-    #heuristic value for node = total_heuristic_value - (launched_weight * avereage_cost)
-
-    for x in range(0, len(node_list)):
-        f_value = get_f_value(node_list[x], total_heuristic_value, average_cost)
-        if (minimo > f_value):
-            minimo = f_value
-            index = x
-    expansion_node = node_list[index]
-    del node_list[index]
-    return expansion_node
 
 #General_search: General search algorithm (problem independent)
 #Arguments: Problem definition, strategy to implement
@@ -538,7 +490,7 @@ def General_search(problem_1, strategy):
     while(flag):
         if not open_list:
             return False
-        expansion_node = strategy(open_list)
+        expansion_node = strategy(open_list, PESOS)
         print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
         expansion_node.print_state()
         if (check_goal(expansion_node)):
@@ -547,6 +499,7 @@ def General_search(problem_1, strategy):
             child_nodes = successor(expansion_node)
             add_new_or_low_cost_state(open_list, child_nodes)
         flag += 1
+        
 
 def main():
     V, E, L, G = read_doc(DOC)
@@ -564,7 +517,9 @@ def main():
 
     problem_1 = problem(init, successor, 0)
 
-    sol = General_search(problem_1,A_star)
+    #sol = General_search(problem_1, Selection.uniform_cost)
+    sol = General_search(problem_1,Selection.A_star)
+
     print ("solution:", sol)
 
 if __name__ == "__main__":
