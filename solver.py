@@ -529,21 +529,12 @@ def write_output_file(solution_node, doc_name):
 
 #Main
 def main():
-<<<<<<< HEAD
     #Checks the syntax of the command
+    start_time = time.time()
     if len(sys.argv) == 3:
         MODE = sys.argv[1]
         if sys.argv[1] == "-u":
             method = strategy.uniform_cost
-=======
-    start_time = time.time()
-    MODE = sys.argv[1]
-    if sys.argv[1] == "-u":
-        method = strategy.uniform_cost
-    else:
-        if sys.argv[1] == "-i":
-            method = strategy.A_star
->>>>>>> f1738ed1e20459e69451fcfe2ad1b41ece254ba0
         else:
             if sys.argv[1] == "-i":
                 method = strategy.A_star
@@ -559,16 +550,10 @@ def main():
         print("")
         print("method: '-u' for uninformed search, '-i' for informed search")
         exit(0)
-    DOC = sys.argv[2]
-<<<<<<< HEAD
 
+    DOC = sys.argv[2]
     #Reads the file
     V, E, L, G = read_doc(DOC)
-    print(PESOS)
-=======
-    
-    V, E, L, G = read_doc(DOC)
->>>>>>> f1738ed1e20459e69451fcfe2ad1b41ece254ba0
 
     #Searches for a solution
     init = State(0,[])
