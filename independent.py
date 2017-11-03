@@ -1,7 +1,6 @@
-
-
 #General_search: General search algorithm (problem independent)
-#Arguments: Problem definition, strategy to implement
+#Arguments: Problem definition, strategy to implement, weights dictionary, list of heuristic values for states
+#Return: Goal state
 def General_search(problem_1, strategy,PESOS,HEURISTIC_VALUE):
     open_list= []
     close_list = []
@@ -13,8 +12,6 @@ def General_search(problem_1, strategy,PESOS,HEURISTIC_VALUE):
         if not open_list:
             return False
         expansion_node = strategy(open_list, PESOS, HEURISTIC_VALUE)
-        #print ("expande node,", flag,":-------------", "lenght of open_list:", len(open_list))
-        #expansion_node.print_state()
         if (problem_1.Check_Goal(expansion_node)):
             return expansion_node, flag
         else:

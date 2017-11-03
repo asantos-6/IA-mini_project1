@@ -1,4 +1,4 @@
-
+#Class Problem definition
 class problem:
 	def __init__(self, init_state, successor, path_cost, check, add_state):
 		self.Init_state = init_state

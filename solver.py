@@ -1,3 +1,4 @@
+#solver.py
 import networkx as nx
 import sys
 import time
@@ -13,19 +14,18 @@ import strategy
 import independent
 
 MAX = 999999
-MAX_PRICE = 0
-INDEX = 0
-DOC = "mir.txt"
 G = nx.Graph()
 PESOS = dict()
-BUG = 0
 launch_datas = []               #Matrix containing launch informations
 VERTICES = []
 V = []
-HEURISTIC_VALUE = []            #best heuristic value from each launch, tem a melhor heuristic apatir da determinada lance, por exemplo no index 1, tem o valor de heuristica pos lance 1
+HEURISTIC_VALUE = []            #Best heuristic value from each launch
+                                #For example, for index 1, it has the heuristic value of launch 1
 
 
-#replace all whitaspaces to one whitespace
+#removeWhitespaces: Replaces all whitaspaces to one whitespace
+#Arguments: Line to process
+#Return: Line processed
 def removeWhitespaces(line):
     result = ""
     prevChar= " "
@@ -35,7 +35,8 @@ def removeWhitespaces(line):
         prevChar = c
     return result
 
-
+#get_launch_data: Sorts the launch information stored by launch date
+#Arguments: Stored launch information for all launches
 def get_launch_data(data):
     data.sort(key = lambda row: row[0])
     launch_info0 = []               #List with each launch date
@@ -60,7 +61,7 @@ def get_launch_data(data):
                 index = y
         HEURISTIC_VALUE.append(minimo)
 
-    
+
 
 
 
@@ -74,6 +75,7 @@ def get_launch_data(data):
 
 #read_doc: Reads the input document and returns the read data
 #Arguments: Text file to be read
+#Return: A list of elements, a list of edges, the information for all launches and the graph of the structure to build
 def read_doc(doc_name):
 
     Vertices = []                   #Vertices list
@@ -138,8 +140,8 @@ def isInList(list_a, element):
             return True
     return False
 
-#combinations: Finds all combinations (??)
-#Arguments: (??)
+#combinations: Finds all combinations of a list of elements
+#Return: The combination of the elements
 def combinations(target,data):
     result = []
     for i in range(len(data)):
@@ -178,6 +180,7 @@ def remove_launched_node(adj, launched):
 
 #find_all_adj_nodes: Finds all the adjacent nodes to a set of nodes
 #Arguments: Set of nodes to check adjacent node
+#Return: Set of adacent nodes adjacent to the launched nodes
 def find_all_adj_nodes(launched_nodes):
     all_adj_nodes = []
     if (len(launched_nodes) < 1):           #se for primeiro lance, launch = 0, todos nos podem ser "adjacentes"
@@ -197,7 +200,7 @@ def add_launch(state_list):
         a.increment_launch()
 
 #actualize_path: Updates the path of every state that is in state_list. First it finds the previous path up to the father node
-#and then it adds the path from the father node to cureent (child) node
+#and then it adds the path from the father node to current (child) node
 #Arguments: List of states to update path, previous path
 def actualize_path(state_list,previous_path):
     for a in state_list:
@@ -293,7 +296,7 @@ def remove_exceed_weight(node_list, max_payload):
     for x in remove[::-1]:
         del node_list[x]
 
-#remove_not_connected: Deletes situations in ehich the nodes are not all connected amongst themselves in station the graph
+#remove_not_connected: Deletes situations in which the nodes are not all connected amongst themselves in the station graph
 #Arguments: List of nodes, already launched elements
 def remove_not_connected(node_list, launched_elements):
     remove = []
@@ -315,6 +318,7 @@ def remove_not_connected(node_list, launched_elements):
 
 #find_all_next_states_by_combination: Given a state as an input, this function returns every possible state that succeeds it by combinations
 #Arguments: State from which to find the succeeding states, max payload
+#Return: Child nodes computed of the father
 def find_all_next_states_by_combination(state, max_payload):
     target = []
     childs = []
@@ -347,6 +351,7 @@ def find_all_next_states_by_combination(state, max_payload):
 
 #successor: Finds the next states of a given state by two means possible: combinations or recursive fucntion
 #Arguments: State from which to find the succeeding states
+#Return: Child nodes computed of the father
 def successor(actual_state):
     childs = []
     all_elements = 0
@@ -381,7 +386,8 @@ def successor(actual_state):
 
 
 #new_nodes: This function finds the unlaunched new adjacent nodes
-#Arguments:  list of already launched nodes,list of new adjacent nodes of the new launched node
+#Arguments: list of already launched nodes,list of new adjacent nodes of the new launched node
+#Return: New adaecnt nodes to the station
 def new_nodes(launched_nodes, new):
     repeat_list = []
 
@@ -396,6 +402,7 @@ def new_nodes(launched_nodes, new):
 
 #find_all_next_states: Given a state as an input, this function returns every possible state that succeeds it recursively
 #Arguments: State from which to find the succeeding states, already launched nodes, adjacent nodes, max payload, current weight
+#Return: Next states
 def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, act_weight):
     next_states = []
 
@@ -418,8 +425,8 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
                 new_adj_nodes.extend(new_nodes(new_launched, adj_list))
                 new_act_weight = act_weight + float(PESOS[adj_nodes[x]])
 
-                if (len(adj_nodes) == len(PESOS)):   #Não sei o q diga aqui XIA                #estes dois linhas sao obras de arte, que corrige o erro dos nos adjacentes quando todos nos sao possiveis para aqueles so sao possiveis apos um componente
-                    new_adj_nodes = find_all_adj_nodes(new_state.get_element())
+                if (len(adj_nodes) == len(PESOS)):
+                    new_adj_nodes = find_all_adj_nodes(new_state.get_element()) #Calls the function recursively to finde every possible child node
                 addInexistenceState(next_states,find_all_next_states(new_state, new_state.get_element(), new_adj_nodes, max_payload, new_act_weight))  #Only adds those states that are still not accounted for
 
     return next_states
@@ -427,6 +434,7 @@ def find_all_next_states(actual_state, launched_nodes, adj_nodes, max_payload, a
 
 #find_adj_node: Finds all adjacent nodes given a node
 #Arguments: State (node)
+#Return: List of adjacent nodes
 def find_adj_node(node):
     node_key = G[node]
     node_list = []
@@ -435,14 +443,14 @@ def find_adj_node(node):
     return node_list
 
 #check_goal: Goal checking function
-#Arguments: State to check wheter if it's a goal state or not
+#Arguments: State to check whether if it's a goal state or not
 def check_goal(state):
     if (len(state.get_element()) == len(PESOS)):
         return True
     else:
         return False
 
-#exist_or_higher_cost: Checks wether a state already exists or has higher cost than the ones already there
+#exist_or_higher_cost: Checks whether a state already exists or has higher cost than the ones already there
 #Arguments: List of original states, state to check
 def exist_or_higher_cost(original_list, new_element):
     for a in original_list:
@@ -464,11 +472,6 @@ def add_new_or_low_cost_state(original_states, new_states):
 
     original_states.extend(new_states)
 
-
-'''
-create a filter that remves impossible nodes
-1 - node with max launch with incomplete satelite
-'''
 #state_filter: Filters out impossible states. Ex.: State that exhausted all the launches but still hasn't all elements in the outer space
 #Arguments: List of nodes to filter
 def state_filter(node_list):
@@ -503,7 +506,8 @@ def state_filter(node_list):
 
 
 
-#creates a output file with correct format
+#write_output_file: Creates a output file with the correct format
+#Arguments: Goal node, filename
 def write_output_file(solution_node, doc_name):
     doc = doc_name.split(".")
     out_file = doc[0] + '.out'
@@ -515,7 +519,7 @@ def write_output_file(solution_node, doc_name):
             string = ''
             for e in path[x]:
                 string += ' '
-                string += e 
+                string += e
             words = str(launch_datas[4][x])
             date = (words[6:8] + words[4:6] + words[0:4])
             line = date + "    " + string + "    " + str(cost[x]) +'\n'
@@ -525,36 +529,41 @@ def write_output_file(solution_node, doc_name):
     f.write(str(total_cost))
     f.close()
 
+#Main
 def main():
-    MODE = sys.argv[1]
-    if sys.argv[1] == "-u":
-        method = strategy.uniform_cost
-    else:
-        if sys.argv[1] == "-i":
-            method = strategy.A_star
+    #Checks the syntax of the command
+    if len(sys.argv) == 3:
+        MODE = sys.argv[1]
+        if sys.argv[1] == "-u":
+            method = strategy.uniform_cost
         else:
-            print("Please use the right configuration for the problem:")
-            print("pyhton jj.py method filename.txt")
-            print("")
-            print("method: '-u' for uninformed search, '-i' for informed search")
-            exit(0)
-
+            if sys.argv[1] == "-i":
+                method = strategy.A_star
+            else:
+                print("Please use the right configuration for the problem:")
+                print("python solver.py method filename.txt")
+                print("")
+                print("method: '-u' for uninformed search, '-i' for informed search")
+                exit(0)
+    else:
+        print("Please use the right configuration for the problem:")
+        print("python solver.py method filename.txt")
+        print("")
+        print("method: '-u' for uninformed search, '-i' for informed search")
+        exit(0)
     DOC = sys.argv[2]
 
+    #Reads the file
     V, E, L, G = read_doc(DOC)
     print(PESOS)
-    MAX_PRICE = 0
 
-    for a in range(0,len(launch_datas[3])):
-        if MAX_PRICE < launch_datas[3][a]:
-            MAX_PRICE = launch_datas[3][a]
-            INDEX = a
-
+    #Searches for a solution
     init = State(0,[])
     problem_1 = problem(init, successor, 0, check_goal, add_new_or_low_cost_state)
     sol, iteration = independent.General_search(problem_1,method, PESOS, HEURISTIC_VALUE)
 
     print ("Number of iterations:", iteration)
+    #Writes output file
     write_output_file(sol, DOC)
 
 if __name__ == "__main__":

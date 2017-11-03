@@ -1,5 +1,4 @@
-
-
+#Class State definition
 class State:
 
     def __init__(self, launch, elements_on_space):
@@ -80,10 +79,10 @@ class State:
         self.path = previous_path
         new_path = []
         i = 0
-        for a in self.path:             #conta quantidades de elementos existentes em path. ou seja, numero de componentes ja lancados
+        for a in self.path:             #counts the number of elements already existing in the path, that is, the number of already launched components
             for b in a:
                 i += 1
-        n = len(self.Elements) - i      #obtem se o numero de componentes que vai ser lancado neste launch
+        n = len(self.Elements) - i      #Number of elements to be launched in this launch
         if n == 0:
             previous_path.append([])
         if (n > 0):
