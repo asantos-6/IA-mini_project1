@@ -118,7 +118,6 @@ def read_doc(doc_name):
     get_launch_data(dates)
 
 
-    print (launch_datas)
     for x in range(0,len( VERTICES)):
         PESOS[VERTICES[x]] = Weight[x]
 
@@ -519,13 +518,13 @@ def write_output_file(solution_node, doc_name):
             words = str(launch_datas[4][x])
             date = (words[6:8] + words[4:6] + words[0:4])
             line = date + "    " + string + "    " + str(cost[x]) +'\n'
-            print (line)
             f.write(line)
     total_cost = solution_node.get_total_cost()
     f.write(str(total_cost))
     f.close()
 
 def main():
+    start_time = time.time()
     MODE = sys.argv[1]
     if sys.argv[1] == "-u":
         method = strategy.uniform_cost
@@ -540,19 +539,17 @@ def main():
             exit(0)
 
     DOC = sys.argv[2]
-
+    
     V, E, L, G = read_doc(DOC)
-    print(PESOS)
-    MAX_PRICE = 0
-
-    for a in range(0,len(launch_datas[3])):
-        if MAX_PRICE < launch_datas[3][a]:
-            MAX_PRICE = launch_datas[3][a]
-            INDEX = a
 
     init = State(0,[])
     problem_1 = problem(init, successor, 0, check_goal, add_new_or_low_cost_state)
+
     sol, iteration = independent.General_search(problem_1,method, PESOS, HEURISTIC_VALUE)
+
+    sol.print_state()
+    search_time = time.time() - start_time
+    print ("time for search:", search_time)
 
     print ("Number of iterations:", iteration)
     write_output_file(sol, DOC)
